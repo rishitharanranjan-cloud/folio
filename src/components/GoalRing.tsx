@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { fonts } from '../theme/tokens';
+import * as haptics from '../lib/haptics';
 
 interface Props {
   logged: number;
@@ -48,7 +49,7 @@ export default function GoalRing({
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={() => { if (onPress) { haptics.tapLight(); onPress(); } }}
       activeOpacity={onPress ? 0.7 : 1}
       accessibilityLabel={a11yLabel}
       accessibilityRole="button"

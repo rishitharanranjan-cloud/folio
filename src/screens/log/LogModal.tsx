@@ -24,6 +24,7 @@ import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
 import { searchMedia, buildManualEntry, type MediaType, type SearchResult } from '../../lib/mediaSearch';
 import { getAmbientColour, clampAmbient, ambientToRgb, ambientToHex } from '../../lib/ambientColour';
+import * as haptics from '../../lib/haptics';
 import { checkTrailCompletion } from '../../lib/trailCompletion';
 import { fonts } from '../../theme/tokens';
 
@@ -88,6 +89,7 @@ export default function LogModal({ onClose, onLogged }: Props) {
     setResults([]);
     setQuery(item.title);
     glowOpacity.value = withTiming(1, { duration: 400 });
+    haptics.tapMedium();
   };
 
   const handleSearch = useCallback((text: string) => {
@@ -142,8 +144,10 @@ export default function LogModal({ onClose, onLogged }: Props) {
       const completedTrail = user
         ? await checkTrailCompletion(user.id, selected.title)
         : null;
+      haptics.success();
       onLogged(selected, rating, review.trim() || undefined, completedTrail ?? undefined);
     } catch (err: any) {
+      haptics.warn();
       Alert.alert('Error', err.message);
     } finally {
       setSaving(false);
@@ -346,7 +350,7 @@ export default function LogModal({ onClose, onLogged }: Props) {
             <Text style={[styles.sectionLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>RATING</Text>
             <View style={styles.stars}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => setRating(rating === star ? 0 : star)} activeOpacity={0.7}>
+                <TouchableOpacity key={star} onPress={() => { haptics.tapLight(); setRating(rating === star ? 0 : star); }} activeOpacity={0.7}>
                   <Text style={[styles.star, { color: star <= rating ? accentColour : colors.bg4 }]}>
                     ★
                   </Text>

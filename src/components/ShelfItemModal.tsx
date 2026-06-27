@@ -7,6 +7,7 @@ import { useThemeStore } from '../store/themeStore';
 import { fonts } from '../theme/tokens';
 import { clampAmbient, hexToRgb, ambientToHex, getAmbientColour } from '../lib/ambientColour';
 import { updateLog } from '../hooks/useLogs';
+import * as haptics from '../lib/haptics';
 import type { LogEntry } from '../hooks/useLogs';
 
 const { height: SCREEN_H } = Dimensions.get('window');
@@ -94,11 +95,12 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
         status: draftStatus,
       };
       await updateLog(displayLog.id, changes);
+      haptics.success();
       onUpdated?.(displayLog.id, changes);
-      // Update lastLog so display reflects the save without closing
       lastLog.current = { ...displayLog, ...changes };
       setEditing(false);
     } catch (e: any) {
+      haptics.warn();
       setSaveError(e.message ?? 'Save failed');
     } finally {
       setSaving(false);
@@ -184,7 +186,7 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
                 {[1,2,3,4,5].map(s => (
                   <TouchableOpacity
                     key={s}
-                    onPress={() => editing && setDraftRating(draftRating === s ? null : s)}
+                    onPress={() => { if (!editing) return; haptics.tapLight(); setDraftRating(draftRating === s ? null : s); }}
                     activeOpacity={editing ? 0.6 : 1}
                     disabled={!editing}
                   >

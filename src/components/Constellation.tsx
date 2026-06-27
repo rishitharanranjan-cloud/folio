@@ -10,6 +10,7 @@ import { useThemeStore } from '../store/themeStore';
 import { buildConstellation, buildConnectionGroups } from '../lib/constellation';
 import { clampAmbient, hexToRgb, ambientToHex } from '../lib/ambientColour';
 import { fonts } from '../theme/tokens';
+import * as haptics from '../lib/haptics';
 import type { LogEntry } from '../hooks/useLogs';
 
 type ConstellationView = 'map' | 'timeline' | 'medium' | 'links';
@@ -220,7 +221,7 @@ export default function Constellation({
           <TouchableOpacity
             key={v}
             style={styles.tab}
-            onPress={() => setView(v)}
+            onPress={() => { haptics.tapLight(); setView(v); }}
             activeOpacity={0.7}
           >
             <Text style={[
