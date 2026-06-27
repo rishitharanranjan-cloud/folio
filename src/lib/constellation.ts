@@ -25,6 +25,8 @@ export interface Star {
   label: string;
   mediaType: string;
   creator: string | null;
+  rating: number | null;
+  date: string;
 }
 
 export interface ConstellationLine {
@@ -73,10 +75,6 @@ function starRadius(rating: number | null): number {
   return 1.8 + (rating - 1) * 0.7; // 1.8 → 4.6
 }
 
-function starColour(log: LogEntry, lineColour: string): string {
-  return log.dominant_colour ?? lineColour;
-}
-
 export function buildConstellation(
   logs: LogEntry[],
   tasteSeeds: { id: string; name: string; type: string }[],
@@ -94,10 +92,12 @@ export function buildConstellation(
       id: log.id,
       x, y,
       r: starRadius(log.rating),
-      colour: starColour(log, lineColour),
+      colour: log.dominant_colour ?? lineColour,
       label: log.title,
       mediaType: log.media_type,
       creator: log.creator,
+      rating: log.rating,
+      date: log.logged_at,
     });
   }
 
@@ -113,6 +113,8 @@ export function buildConstellation(
       label: seed.name,
       mediaType: 'taste',
       creator: null,
+      rating: null,
+      date: '',
     });
   }
 
@@ -128,7 +130,6 @@ export function buildConstellation(
 
   for (const [, group] of byCreator) {
     if (group.length < 2) continue;
-    // Connect consecutive pairs (not full graph — keeps it readable)
     for (let i = 0; i < group.length - 1; i++) {
       lines.push({
         x1: group[i].x, y1: group[i].y,
@@ -139,4 +140,23 @@ export function buildConstellation(
   }
 
   return { stars, lines };
+}
+
+/** Build creator connection groups for the Links view */
+export function buildConnectionGroups(
+  stars: Star[],
+): Map<string, Star[]> {
+  const byCreator = new Map<string, Star[]>();
+  for (const star of stars) {
+    if (!star.creator || star.mediaType === 'taste') continue;
+    const key = star.creator.toLowerCase().trim();
+    const existing = byCreator.get(key) ?? [];
+    existing.push(star);
+    byCreator.set(key, existing);
+  }
+  // Keep only groups with ≥2 entries
+  for (const [k, v] of byCreator) {
+    if (v.length < 2) byCreator.delete(k);
+  }
+  return byCreator;
 }
