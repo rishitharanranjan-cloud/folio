@@ -24,13 +24,13 @@ export function useLogs(mediaType?: string) {
   const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {
       let query = supabase
         .from('logs')
-        .select('*')
+        .select('id,media_type,title,creator,year,status,rating,review,cover_url,dominant_colour,logged_at,external_id')
         .eq('user_id', user.id)
         .order('logged_at', { ascending: false });
 
