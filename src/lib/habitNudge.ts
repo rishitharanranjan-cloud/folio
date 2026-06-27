@@ -6,6 +6,8 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+const WEEKLY_NUDGE_ID = 'folio-weekly-nudge';
+
 const NUDGE_MESSAGES = [
   "What did you finish this week?",
   "Anything worth logging this week?",
@@ -32,11 +34,12 @@ export async function scheduleWeeklyNudge(): Promise<void> {
   const granted = await requestNotificationPermission();
   if (!granted) return;
 
-  // Cancel any existing weekly nudge before rescheduling
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  // Cancel only the weekly nudge before rescheduling
+  await Notifications.cancelScheduledNotificationAsync(WEEKLY_NUDGE_ID);
 
   // Schedule for Sunday at 19:00 local time, repeating weekly
   await Notifications.scheduleNotificationAsync({
+    identifier: WEEKLY_NUDGE_ID,
     content: {
       title: 'FOLIO',
       body: randomNudge(),
@@ -53,7 +56,7 @@ export async function scheduleWeeklyNudge(): Promise<void> {
 
 export async function cancelWeeklyNudge(): Promise<void> {
   if (Platform.OS === 'web') return;
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await Notifications.cancelScheduledNotificationAsync(WEEKLY_NUDGE_ID);
 }
 
 /** Check if it's been 7+ days since last log — used for in-app nudge on web */

@@ -171,14 +171,15 @@ export function buildManualEntry(
   year: string,
   type: MediaType,
 ): SearchResult {
+  const ts = Date.now();
   return {
-    id:          `manual-${Date.now()}`,
+    id:          `manual-${ts}`,
     title:       title.trim(),
     creator:     creator.trim(),
     year:        parseInt(year) || null,
     coverUrl:    null,
     coverUrlHD:  null,
     mediaType:   type,
-    externalId:  `manual-${Date.now()}`,
+    externalId:  `manual-${ts}`,
   };
 }
