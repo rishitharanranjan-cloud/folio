@@ -381,7 +381,14 @@ export default function ShelfScreen() {
           <View style={{ height: 48 }} />
         </ScrollView>
       )}
-      <ShelfItemModal log={selectedLog} onClose={() => setSelectedLog(null)} />
+      <ShelfItemModal
+        log={selectedLog}
+        onClose={() => setSelectedLog(null)}
+        onUpdated={(id, changes) => {
+          setSelectedLog(prev => prev && prev.id === id ? { ...prev, ...changes } : prev);
+          refetch();
+        }}
+      />
     </SafeAreaView>
   );
 }

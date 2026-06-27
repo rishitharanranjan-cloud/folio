@@ -50,3 +50,14 @@ export function useLogs(mediaType?: string) {
 
   return { logs, loading, error, refetch: fetch };
 }
+
+export interface LogUpdate {
+  rating?: number | null;
+  review?: string | null;
+  status?: string;
+}
+
+export async function updateLog(id: string, changes: LogUpdate): Promise<void> {
+  const { error } = await supabase.from('logs').update(changes).eq('id', id);
+  if (error) throw new Error(error.message);
+}

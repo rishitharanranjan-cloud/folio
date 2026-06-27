@@ -1,21 +1,22 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Image,
-  Modal, ScrollView, Animated, Dimensions, Platform,
+  Modal, ScrollView, Animated, Dimensions, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useThemeStore } from '../store/themeStore';
 import { fonts } from '../theme/tokens';
 import { clampAmbient, hexToRgb, ambientToHex, getAmbientColour } from '../lib/ambientColour';
+import { updateLog } from '../hooks/useLogs';
 import type { LogEntry } from '../hooks/useLogs';
 
 const { height: SCREEN_H } = Dimensions.get('window');
-const SHEET_H = SCREEN_H * 0.72;
+const SHEET_H = SCREEN_H * 0.78;
 
-const STATUS_LABEL: Record<string, string> = {
-  completed:   'COMPLETED',
-  in_progress: 'IN PROGRESS',
-  dropped:     'DROPPED',
-};
+const STATUS_OPTIONS = [
+  { key: 'completed',   label: 'DONE' },
+  { key: 'in_progress', label: 'IN PROGRESS' },
+  { key: 'dropped',     label: 'DROPPED' },
+];
 
 const MEDIA_LABEL: Record<string, string> = {
   book: 'BOOK', film: 'FILM', tv: 'TV', album: 'ALBUM', podcast: 'PODCAST', game: 'GAME',
@@ -24,17 +25,37 @@ const MEDIA_LABEL: Record<string, string> = {
 interface Props {
   log: LogEntry | null;
   onClose: () => void;
+  onUpdated?: (id: string, changes: Partial<LogEntry>) => void;
 }
 
-export default function ShelfItemModal({ log, onClose }: Props) {
+export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
   const { colors, mode } = useThemeStore();
   const isDark = mode === 'dark';
   const slideY = useRef(new Animated.Value(SHEET_H)).current;
   const bgO    = useRef(new Animated.Value(0)).current;
+
   // Keep last non-null log so content stays visible during the exit animation.
   const lastLog = useRef<LogEntry | null>(null);
   if (log) lastLog.current = log;
   const displayLog = lastLog.current;
+
+  const [editing, setEditing]     = useState(false);
+  const [draftRating, setDraftRating] = useState<number | null>(null);
+  const [draftReview, setDraftReview] = useState('');
+  const [draftStatus, setDraftStatus] = useState('');
+  const [saving, setSaving]       = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Reset edit state whenever a new log is shown
+  useEffect(() => {
+    if (log) {
+      setEditing(false);
+      setDraftRating(log.rating);
+      setDraftReview(log.review ?? '');
+      setDraftStatus(log.status ?? 'completed');
+      setSaveError(null);
+    }
+  }, [log?.id]);
 
   useEffect(() => {
     if (log) {
@@ -63,6 +84,31 @@ export default function ShelfItemModal({ log, onClose }: Props) {
     ? `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.12)`
     : colors.accentg;
 
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const changes = {
+        rating: draftRating,
+        review: draftReview.trim() || null,
+        status: draftStatus,
+      };
+      await updateLog(displayLog.id, changes);
+      onUpdated?.(displayLog.id, changes);
+      // Update lastLog so display reflects the save without closing
+      lastLog.current = { ...displayLog, ...changes };
+      setEditing(false);
+    } catch (e: any) {
+      setSaveError(e.message ?? 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const viewRating  = editing ? draftRating  : displayLog.rating;
+  const viewReview  = editing ? draftReview  : (displayLog.review ?? '');
+  const viewStatus  = editing ? draftStatus  : (displayLog.status ?? 'completed');
+
   return (
     <Modal transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       {/* Scrim */}
@@ -78,15 +124,33 @@ export default function ShelfItemModal({ log, onClose }: Props) {
         {/* Accent bar */}
         <View style={[styles.accentBar, { backgroundColor: accentHex }]} />
 
-        {/* Handle */}
-        <View style={[styles.handle, { backgroundColor: colors.border2 }]} />
+        {/* Handle + edit toggle */}
+        <View style={styles.topBar}>
+          <View style={[styles.handle, { backgroundColor: colors.border2 }]} />
+          <TouchableOpacity
+            style={[styles.editToggle, {
+              borderColor: editing ? accentHex : colors.border2,
+              backgroundColor: editing ? accentFill : 'transparent',
+            }]}
+            onPress={() => { setEditing(e => !e); setSaveError(null); }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.editToggleTxt, {
+              color: editing ? accentHex : colors.ink3,
+              fontFamily: fonts.mono,
+            }]}>
+              {editing ? 'CANCEL' : 'EDIT'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Cover + meta side-by-side */}
+          {/* Cover + meta */}
           <View style={styles.topRow}>
             {displayLog.cover_url ? (
               <Image source={{ uri: displayLog.cover_url }} style={[styles.cover, { borderColor: colors.border }]} resizeMode="cover" />
@@ -115,22 +179,57 @@ export default function ShelfItemModal({ log, onClose }: Props) {
                 </Text>
               )}
 
-              {/* Rating */}
-              {displayLog.rating ? (
-                <View style={styles.ratingRow}>
-                  {[1,2,3,4,5].map(s => (
-                    <Text key={s} style={[styles.star, { color: s <= displayLog.rating! ? accentHex : colors.border2 }]}>★</Text>
+              {/* Rating — tappable stars in edit mode */}
+              <View style={styles.ratingRow}>
+                {[1,2,3,4,5].map(s => (
+                  <TouchableOpacity
+                    key={s}
+                    onPress={() => editing && setDraftRating(draftRating === s ? null : s)}
+                    activeOpacity={editing ? 0.6 : 1}
+                    disabled={!editing}
+                  >
+                    <Text style={[styles.star, {
+                      color: (viewRating ?? 0) >= s ? accentHex : colors.border2,
+                      fontSize: editing ? 22 : 18,
+                    }]}>★</Text>
+                  </TouchableOpacity>
+                ))}
+                {editing && viewRating && (
+                  <TouchableOpacity onPress={() => setDraftRating(null)} activeOpacity={0.6}>
+                    <Text style={[styles.clearRating, { color: colors.ink3, fontFamily: fonts.mono }]}>✕</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Status chips — only in edit mode */}
+              {editing && (
+                <View style={styles.statusChips}>
+                  {STATUS_OPTIONS.map(opt => (
+                    <TouchableOpacity
+                      key={opt.key}
+                      style={[styles.statusChip, {
+                        borderColor: viewStatus === opt.key ? accentHex : colors.border2,
+                        backgroundColor: viewStatus === opt.key ? accentFill : 'transparent',
+                      }]}
+                      onPress={() => setDraftStatus(opt.key)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.statusChipTxt, {
+                        color: viewStatus === opt.key ? accentHex : colors.ink3,
+                        fontFamily: fonts.mono,
+                      }]}>
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
                   ))}
                 </View>
-              ) : (
-                <Text style={[styles.unrated, { color: colors.ink3, fontFamily: fonts.mono }]}>NOT RATED</Text>
               )}
 
-              {/* Status */}
-              {displayLog.status && displayLog.status !== 'completed' && (
+              {/* Status pill — read mode only */}
+              {!editing && displayLog.status && displayLog.status !== 'completed' && (
                 <View style={[styles.statusPill, { backgroundColor: colors.bg3, borderColor: colors.border }]}>
                   <Text style={[styles.statusText, { color: colors.ink3, fontFamily: fonts.mono }]}>
-                    {STATUS_LABEL[displayLog.status] ?? displayLog.status.toUpperCase()}
+                    {STATUS_OPTIONS.find(o => o.key === displayLog.status)?.label ?? displayLog.status.toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -141,16 +240,38 @@ export default function ShelfItemModal({ log, onClose }: Props) {
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           {/* Review */}
-          {displayLog.review ? (
+          {editing ? (
+            <TextInput
+              style={[styles.reviewInput, {
+                color: colors.ink,
+                fontFamily: fonts.body,
+                borderColor: colors.border2,
+                backgroundColor: colors.bg3,
+              }]}
+              value={draftReview}
+              onChangeText={setDraftReview}
+              placeholder="Write a review…"
+              placeholderTextColor={colors.ink3}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          ) : viewReview ? (
             <View style={[styles.reviewBox, { borderColor: colors.border, backgroundColor: colors.bg3 }]}>
               <Text style={[styles.quoteGlyph, { color: accentHex, fontFamily: fonts.display }]}>"</Text>
               <Text style={[styles.reviewText, { color: colors.ink2, fontFamily: fonts.body }]}>
-                {displayLog.review}
+                {viewReview}
               </Text>
             </View>
           ) : (
             <Text style={[styles.noReview, { color: colors.ink3, fontFamily: fonts.mono }]}>
               NO REVIEW WRITTEN
+            </Text>
+          )}
+
+          {saveError && (
+            <Text style={[styles.errorText, { color: colors.terra, fontFamily: fonts.mono }]}>
+              {saveError}
             </Text>
           )}
 
@@ -162,14 +283,30 @@ export default function ShelfItemModal({ log, onClose }: Props) {
           </Text>
         </ScrollView>
 
-        {/* Close */}
-        <TouchableOpacity
-          style={[styles.closeBtn, { borderColor: colors.border2 }]}
-          onPress={onClose}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.closeTxt, { color: colors.ink3, fontFamily: fonts.mono }]}>CLOSE</Text>
-        </TouchableOpacity>
+        {/* Footer buttons */}
+        <View style={styles.footer}>
+          {editing ? (
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: accentHex }]}
+              onPress={handleSave}
+              disabled={saving}
+              activeOpacity={0.8}
+            >
+              {saving
+                ? <ActivityIndicator color={colors.bg} size="small" />
+                : <Text style={[styles.saveTxt, { color: colors.bg, fontFamily: fonts.mono }]}>SAVE CHANGES</Text>
+              }
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.closeBtn, { borderColor: colors.border2 }]}
+              onPress={onClose}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.closeTxt, { color: colors.ink3, fontFamily: fonts.mono }]}>CLOSE</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -189,17 +326,32 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   accentBar: { height: 3, width: '100%' },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+    position: 'relative',
+  },
   handle: {
-    alignSelf: 'center',
     width: 40, height: 3,
     borderRadius: 2,
-    marginTop: 10, marginBottom: 4,
   },
+  editToggle: {
+    position: 'absolute',
+    right: 16,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  editToggleTxt: { fontSize: 9, letterSpacing: 2 },
   scroll: { flex: 1 },
   content: {
     paddingHorizontal: 24,
     paddingTop: 16,
-    paddingBottom: 24,
+    paddingBottom: 16,
     gap: 16,
   },
   topRow: { flexDirection: 'row', gap: 18, alignItems: 'flex-start' },
@@ -220,9 +372,12 @@ const styles = StyleSheet.create({
   typeText: { fontSize: 8, letterSpacing: 2 },
   title: { fontSize: 22, letterSpacing: 2, lineHeight: 24 },
   creator: { fontSize: 14, fontStyle: 'italic', lineHeight: 18 },
-  ratingRow: { flexDirection: 'row', gap: 3 },
-  star: { fontSize: 18 },
-  unrated: { fontSize: 9, letterSpacing: 1.5 },
+  ratingRow: { flexDirection: 'row', gap: 4, alignItems: 'center' },
+  star: { lineHeight: 26 },
+  clearRating: { fontSize: 10, marginLeft: 4, lineHeight: 26 },
+  statusChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
+  statusChip: { borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3 },
+  statusChipTxt: { fontSize: 8, letterSpacing: 1.5 },
   statusPill: {
     alignSelf: 'flex-start',
     borderWidth: 1,
@@ -230,17 +385,27 @@ const styles = StyleSheet.create({
   },
   statusText: { fontSize: 8, letterSpacing: 1.5 },
   divider: { height: 1 },
-  reviewBox: {
-    borderWidth: 1,
-    padding: 14,
-    gap: 6,
-  },
+  reviewBox: { borderWidth: 1, padding: 14, gap: 6 },
   quoteGlyph: { fontSize: 28, lineHeight: 22 },
   reviewText: { fontSize: 14, fontStyle: 'italic', lineHeight: 22 },
   noReview: { fontSize: 9, letterSpacing: 2 },
+  reviewInput: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 14,
+    fontStyle: 'italic',
+    lineHeight: 22,
+    minHeight: 100,
+  },
+  errorText: { fontSize: 10, letterSpacing: 1 },
   date: { fontSize: 9, letterSpacing: 1.5 },
+  footer: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4 },
+  saveBtn: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  saveTxt: { fontSize: 11, letterSpacing: 3 },
   closeBtn: {
-    margin: 16,
     borderWidth: 1,
     paddingVertical: 14,
     alignItems: 'center',
