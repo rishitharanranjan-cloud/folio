@@ -56,22 +56,20 @@ async function searchTMDB(query: string, type: 'film' | 'tv'): Promise<SearchRes
 
 async function searchBooks(query: string): Promise<SearchResult[]> {
   // Append language filter to the query string (Open Library full-text syntax)
-  const q = `${query} language:english`;
-  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&limit=20&fields=key,title,author_name,first_publish_year,cover_i,edition_count&sort=editions`;
+  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=20&fields=key,title,author_name,first_publish_year,cover_i,edition_count&sort=editions`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
 
   return (data.docs ?? [])
-    .filter((item: any) => item.cover_i)   // require cover art
-    .slice(0, 8)
+    .slice(0, 10)
     .map((item: any) => ({
       id:          item.key,
       title:       item.title ?? '',
       creator:     (item.author_name ?? []).slice(0, 2).join(', '),
       year:        item.first_publish_year ?? null,
-      coverUrl:    `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg`,
-      coverUrlHD:  `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg`,
+      coverUrl:    item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg` : null,
+      coverUrlHD:  item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg` : null,
       mediaType:   'book' as MediaType,
       externalId:  item.key,
     }));
