@@ -281,7 +281,7 @@ export default function ProfileScreen() {
                   {currentStreak}
                 </Text>
                 <Text style={[styles.streakLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>
-                  {currentStreak === 1 ? 'WEEK STREAK' : 'WEEK STREAK'}
+                  {currentStreak === 1 ? 'WEEK STREAK' : 'WEEKS STREAK'}
                 </Text>
                 {currentStreak > 0 && (
                   <Text style={[styles.streakSub, { color: colors.streak, fontFamily: fonts.mono }]}>ACTIVE</Text>

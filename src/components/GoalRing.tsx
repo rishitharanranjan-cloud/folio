@@ -49,7 +49,7 @@ export default function GoalRing({
 
   return (
     <TouchableOpacity
-      onPress={() => { if (onPress) { haptics.tapLight(); onPress(); } }}
+      onPress={onPress ? () => { haptics.tapLight(); onPress(); } : undefined}
       activeOpacity={onPress ? 0.7 : 1}
       accessibilityLabel={a11yLabel}
       accessibilityRole="button"
