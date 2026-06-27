@@ -55,29 +55,46 @@ async function searchTMDB(query: string, type: 'film' | 'tv'): Promise<SearchRes
 // ─── Open Library ──────────────────────────────────────────────────────────
 
 async function searchBooks(query: string): Promise<SearchResult[]> {
-  const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&language=eng&limit=20&fields=key,title,author_name,first_publish_year,cover_i,edition_count&sort=editions`;
-  const res = await fetch(url);
-  if (!res.ok) return [];
-  const data = await res.json();
+  const FIELDS = 'key,title,author_name,first_publish_year,cover_i,edition_count';
+  const base = `https://openlibrary.org/search.json?fields=${FIELDS}&limit=20&sort=editions`;
 
-  const results = (data.docs ?? []).map((item: any) => ({
-    id:          item.key,
-    title:       item.title ?? '',
-    creator:     (item.author_name ?? []).slice(0, 2).join(', '),
-    year:        item.first_publish_year ?? null,
-    coverUrl:    item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg` : null,
-    coverUrlHD:  item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg` : null,
-    mediaType:   'book' as MediaType,
-    externalId:  item.key,
-  }));
+  // Run full-text and title searches in parallel for better recall
+  const [ftRes, titleRes] = await Promise.all([
+    fetch(`${base}&q=${encodeURIComponent(query)}`),
+    fetch(`${base}&title=${encodeURIComponent(query)}`),
+  ]);
 
-  // Prefer results whose title contains the query words (English editions first)
+  const ftData   = ftRes.ok    ? (await ftRes.json()).docs    ?? [] : [];
+  const titleData = titleRes.ok ? (await titleRes.json()).docs ?? [] : [];
+
+  // Merge, deduplicate by key
+  const seen = new Set<string>();
+  const merged: any[] = [];
+  for (const item of [...titleData, ...ftData]) {
+    if (item.key && !seen.has(item.key)) { seen.add(item.key); merged.push(item); }
+  }
+
   const q = query.toLowerCase();
-  return results.sort((a: any, b: any) => {
-    const aMatch = a.title.toLowerCase().includes(q) ? 0 : 1;
-    const bMatch = b.title.toLowerCase().includes(q) ? 0 : 1;
-    return aMatch - bMatch;
-  }).slice(0, 8);
+  return merged
+    .sort((a, b) => {
+      // Rank: title contains query words > has cover > edition count
+      const aTitle = (a.title ?? '').toLowerCase();
+      const bTitle = (b.title ?? '').toLowerCase();
+      const aScore = (aTitle.includes(q) ? 2 : 0) + (a.cover_i ? 1 : 0);
+      const bScore = (bTitle.includes(q) ? 2 : 0) + (b.cover_i ? 1 : 0);
+      return bScore - aScore;
+    })
+    .slice(0, 10)
+    .map((item: any) => ({
+      id:         item.key,
+      title:      item.title ?? '',
+      creator:    (item.author_name ?? []).slice(0, 2).join(', '),
+      year:       item.first_publish_year ?? null,
+      coverUrl:   item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg` : null,
+      coverUrlHD: item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg` : null,
+      mediaType:  'book' as MediaType,
+      externalId: item.key,
+    }));
 }
 
 // ─── MusicBrainz ───────────────────────────────────────────────────────────
