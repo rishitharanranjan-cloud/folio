@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Folio — Icon Generator v3</title>
+  <style>
+    body { background: #040c18; color: #d8eaf8; font-family: monospace; padding: 32px; }
+    h1 { color: #c8a050; letter-spacing: 4px; font-size: 13px; margin-bottom: 4px; }
+    p { color: #486888; font-size: 11px; line-height: 1.6; max-width: 560px; margin-bottom: 32px; }
+    .row { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 40px; }
+    .item { display: flex; flex-direction: column; gap: 8px; }
+    .label { color: #c8a050; letter-spacing: 2px; font-size: 10px; }
+    canvas { display: block; border: 1px solid #1a2e50; }
+    button {
+      background: #c8a050; color: #040c18; border: none;
+      padding: 9px 18px; cursor: pointer; font-family: monospace;
+      font-size: 10px; letter-spacing: 2px;
+    }
+    button:hover { background: #d8b060; }
+    .dl-all {
+      background: #4a90d4; color: #020810; border: none;
+      padding: 14px 32px; cursor: pointer; font-family: monospace;
+      font-size: 12px; letter-spacing: 3px; margin-bottom: 40px;
+      display: block;
+    }
+    .dl-all:hover { background: #6aaae4; }
+    .note { color: #486888; font-size: 10px; letter-spacing: 1px; margin-top: 4px; }
+    .mark-desc {
+      color: #486888; font-size: 10px; line-height: 1.8; margin-bottom: 24px;
+      border-left: 2px solid #243e64; padding-left: 14px;
+    }
+    .mark-desc span { color: #c8a050; }
+  </style>
+</head>
+<body>
+  <h1>FOLIO — ICON GENERATOR v3</h1>
+  <p>
+    Mark: The Folio Code — morse/barcode-inspired identity mark.<br>
+    Four elements: two small squares · tall bar · small square · dot.<br>
+    Reads like a signal. Nordic Frost palette (Arctic Blue on Midnight Fjord).
+  </p>
+
+  <div class="mark-desc">
+    <span>■ ■ █ ■ •</span><br>
+    sq · sq · tall bar · sq · dot<br>
+    Proportions: 4:4:12:4:4 (height), 4 wide each, 3px gap
+  </div>
+
+  <button class="dl-all" onclick="downloadAll()">↓ DOWNLOAD ALL ASSETS</button>
+
+  <div class="row">
+    <div class="item">
+      <div class="label">ICON  1024×1024</div>
+      <canvas id="icon" width="1024" height="1024" style="width:160px;height:160px"></canvas>
+      <button onclick="dl('icon','icon.png')">↓ icon.png</button>
+    </div>
+    <div class="item">
+      <div class="label">SPLASH  2048×2048</div>
+      <canvas id="splash" width="2048" height="2048" style="width:160px;height:160px"></canvas>
+      <button onclick="dl('splash','splash.png')">↓ splash.png</button>
+    </div>
+    <div class="item">
+      <div class="label">ANDROID FOREGROUND  1024×1024</div>
+      <canvas id="adr" width="1024" height="1024" style="width:160px;height:160px"></canvas>
+      <button onclick="dl('adr','android-icon-foreground.png')">↓ android-icon-foreground.png</button>
+    </div>
+    <div class="item">
+      <div class="label">ANDROID BG  1024×1024</div>
+      <canvas id="adrbg" width="1024" height="1024" style="width:160px;height:160px"></canvas>
+      <button onclick="dl('adrbg','android-icon-background.png')">↓ android-icon-background.png</button>
+    </div>
+    <div class="item">
+      <div class="label">MONOCHROME  1024×1024</div>
+      <canvas id="mono" width="1024" height="1024" style="width:160px;height:160px"></canvas>
+      <button onclick="dl('mono','android-icon-monochrome.png')">↓ android-icon-monochrome.png</button>
+    </div>
+    <div class="item">
+      <div class="label">FAVICON  64×64</div>
+      <canvas id="fav" width="64" height="64" style="width:64px;height:64px"></canvas>
+      <button onclick="dl('fav','favicon.png')">↓ favicon.png</button>
+    </div>
+  </div>
+
+  <script>
+    // ── Palette ───────────────────────────────────────────────────────────────
+    const MIDNIGHT = '#040c18';   // Nordic Frost bg
+    const ARCTIC   = '#4a90d4';   // Arctic Blue accent
+    const GOLD     = '#c8a050';   // Pale Gold editorial
+    const ICE      = '#d8eaf8';   // Ice line text
+    const SLATE    = '#0a1a2e';   // Slate Ice surface
+
+    // ── Folio Code Mark ───────────────────────────────────────────────────────
+    // Elements: sq · sq · tall-bar · sq · dot
+    // All sized relative to barH (the tall bar height), which is the mark's
+    // controlling dimension. Set markH to control the overall size.
+    //
+    // Layout (left to right, centred vertically):
+    //   sq:  w=barH*0.333, h=barH*0.333
+    //   gap: barH*0.25
+    //   bar: w=barH*0.333, h=barH
+    //   dot: r=barH*0.167
+    //
+    function drawFolioCode(ctx, cx, cy, markH, color) {
+      const barH = markH;
+      const sq   = barH * 0.333;
+      const barW = barH * 0.333;
+      const gap  = barH * 0.25;
+      const r    = barH * 0.167;
+
+      // Total width: sq + gap + sq + gap + barW + gap + sq + gap + 2r
+      const totalW = sq + gap + sq + gap + barW + gap + sq + gap + (r * 2);
+      let x = cx - totalW / 2;
+
+      ctx.fillStyle = color;
+
+      // sq 1
+      ctx.fillRect(x, cy - sq / 2, sq, sq);
+      x += sq + gap;
+
+      // sq 2
+      ctx.fillRect(x, cy - sq / 2, sq, sq);
+      x += sq + gap;
+
+      // tall bar
+      ctx.fillRect(x, cy - barH / 2, barW, barH);
+      x += barW + gap;
+
+      // sq 3
+      ctx.fillRect(x, cy - sq / 2, sq, sq);
+      x += sq + gap;
+
+      // dot
+      ctx.beginPath();
+      ctx.arc(x + r, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // ── App Icon 1024×1024 ────────────────────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('icon');
+      const ctx = canvas.getContext('2d');
+      const S = 1024;
+
+      // Background — Midnight Fjord
+      ctx.fillStyle = MIDNIGHT;
+      ctx.fillRect(0, 0, S, S);
+
+      // Subtle radial glow — Arctic Blue
+      const grad = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.55);
+      grad.addColorStop(0, 'rgba(74,144,212,0.09)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, S, S);
+
+      // Hairline grid (barely visible)
+      ctx.strokeStyle = 'rgba(74,144,212,0.04)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 8; i++) {
+        ctx.beginPath(); ctx.moveTo(S * i / 8, 0); ctx.lineTo(S * i / 8, S); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, S * i / 8); ctx.lineTo(S, S * i / 8); ctx.stroke();
+      }
+
+      // Gold top accent line
+      ctx.fillStyle = GOLD;
+      ctx.fillRect(0, 0, S, S * 0.012);
+
+      // Folio Code Mark — centred
+      drawFolioCode(ctx, S / 2, S / 2, S * 0.28, ARCTIC);
+    })();
+
+    // ── Splash 2048×2048 ─────────────────────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('splash');
+      const ctx = canvas.getContext('2d');
+      const S = 2048;
+
+      ctx.fillStyle = MIDNIGHT;
+      ctx.fillRect(0, 0, S, S);
+
+      const grad = ctx.createRadialGradient(S / 2, S * 0.42, 0, S / 2, S * 0.42, S * 0.5);
+      grad.addColorStop(0, 'rgba(74,144,212,0.07)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, S, S);
+
+      // Subtle grid
+      ctx.strokeStyle = 'rgba(74,144,212,0.03)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 12; i++) {
+        ctx.beginPath(); ctx.moveTo(S * i / 12, 0); ctx.lineTo(S * i / 12, S); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, S * i / 12); ctx.lineTo(S, S * i / 12); ctx.stroke();
+      }
+
+      // Top bar
+      ctx.fillStyle = GOLD;
+      ctx.fillRect(0, 0, S, S * 0.006);
+
+      // Folio Code Mark — slightly above centre
+      drawFolioCode(ctx, S / 2, S * 0.42, S * 0.14, ARCTIC);
+
+      // "folio." wordmark below mark
+      ctx.fillStyle = ICE;
+      ctx.font = `${S * 0.058}px "Georgia", serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText('folio', S * 0.487, S * 0.535);
+
+      // Period in gold
+      const textWidth = ctx.measureText('folio').width;
+      ctx.fillStyle = GOLD;
+      ctx.fillText('.', S * 0.487 + textWidth * 0.5 + S * 0.005, S * 0.535);
+
+      // Thin rule beneath wordmark
+      ctx.fillStyle = GOLD;
+      ctx.globalAlpha = 0.3;
+      ctx.fillRect(S * 0.5 - S * 0.055, S * 0.625, S * 0.11, S * 0.0015);
+      ctx.globalAlpha = 1;
+
+      // Constellation dots
+      [
+        [S * 0.2,  S * 0.27, S * 0.008, GOLD,  0.45],
+        [S * 0.8,  S * 0.25, S * 0.008, GOLD,  0.45],
+        [S * 0.13, S * 0.42, S * 0.005, ICE,   0.25],
+        [S * 0.88, S * 0.38, S * 0.005, ICE,   0.25],
+        [S * 0.24, S * 0.76, S * 0.006, ICE,   0.2],
+        [S * 0.78, S * 0.79, S * 0.006, ICE,   0.2],
+      ].forEach(([cx, cy, r, col, a]) => {
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = col; ctx.globalAlpha = a; ctx.fill(); ctx.globalAlpha = 1;
+      });
+    })();
+
+    // ── Android foreground (transparent bg) ──────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('adr');
+      const ctx = canvas.getContext('2d');
+      const S = 1024;
+      ctx.clearRect(0, 0, S, S);
+      drawFolioCode(ctx, S / 2, S / 2, S * 0.32, ARCTIC);
+    })();
+
+    // ── Android background ────────────────────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('adrbg');
+      const ctx = canvas.getContext('2d');
+      const S = 1024;
+      ctx.fillStyle = MIDNIGHT;
+      ctx.fillRect(0, 0, S, S);
+      const grad = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.65);
+      grad.addColorStop(0, 'rgba(74,144,212,0.09)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, S, S);
+    })();
+
+    // ── Monochrome (white mark on black) ─────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('mono');
+      const ctx = canvas.getContext('2d');
+      const S = 1024;
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, S, S);
+      drawFolioCode(ctx, S / 2, S / 2, S * 0.28, '#fff');
+    })();
+
+    // ── Favicon 64×64 ────────────────────────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('fav');
+      const ctx = canvas.getContext('2d');
+      const S = 64;
+      ctx.fillStyle = MIDNIGHT;
+      ctx.fillRect(0, 0, S, S);
+      ctx.fillStyle = GOLD;
+      ctx.fillRect(0, 0, S, S * 0.07);
+      drawFolioCode(ctx, S / 2, S * 0.54, S * 0.3, ARCTIC);
+    })();
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function dl(id, filename) {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = document.getElementById(id).toDataURL('image/png');
+      link.click();
+    }
+
+    function downloadAll() {
+      const files = [
+        ['icon', 'icon.png'],
+        ['splash', 'splash.png'],
+        ['adr', 'android-icon-foreground.png'],
+        ['adrbg', 'android-icon-background.png'],
+        ['mono', 'android-icon-monochrome.png'],
+        ['fav', 'favicon.png'],
+      ];
+      files.forEach(([id, name], i) => setTimeout(() => dl(id, name), i * 300));
+    }
+  </script>
+</body>
+</html>
