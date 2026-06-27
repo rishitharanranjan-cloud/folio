@@ -35,7 +35,7 @@ export default function Chapter8Share({ data, onClose }: Props) {
             {topType && (
               <View style={styles.cardStat}>
                 <Text style={[styles.cardNum, { fontFamily: fonts.display, color: W.cream }]}>{topType[1]}</Text>
-                <Text style={[styles.cardLabel, { fontFamily: fonts.mono, color: 'rgba(245,237,216,0.5)' }]}>{topType[0].toUpperCase()}S</Text>
+                <Text style={[styles.cardLabel, { fontFamily: fonts.mono, color: 'rgba(245,237,216,0.5)' }]}>{topType[0] === 'tv' ? 'TV SHOWS' : `${topType[0].toUpperCase()}S`}</Text>
               </View>
             )}
             {data.avgRating && (

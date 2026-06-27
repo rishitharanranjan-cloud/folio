@@ -54,7 +54,7 @@ export default function Chapter2Numbers({ data }: { data: WrappedData }) {
                     styles.bar,
                     {
                       height: m.count > 0 ? Math.max(4, (m.count / maxMonth) * BAR_MAX_H) : 2,
-                      backgroundColor: m.count === Math.max(...data.monthlyActivity.map(x => x.count))
+                      backgroundColor: m.count === maxMonth
                         ? W.mustard : 'rgba(245,237,216,0.35)',
                     }
                   ]} />
