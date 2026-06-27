@@ -3,7 +3,7 @@
  * MAP: media-type star clusters · TIMELINE: chronological scatter
  * MEDIUM: bar chart by type   · LINKS: creator connection graph
  */
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText, Rect, G } from 'react-native-svg';
 import { useThemeStore } from '../store/themeStore';
@@ -36,6 +36,25 @@ const MEDIA_DISPLAY: Record<string, string> = {
   tv: 'TV', podcast: 'PODS', game: 'GAMES',
 };
 
+const REGION_LABELS = [
+  { label: 'BOOKS',  x: 0.04, y: 0.03 },
+  { label: 'FILMS',  x: 0.56, y: 0.03 },
+  { label: 'ALBUMS', x: 0.04, y: 0.97 },
+  { label: 'TV',     x: 0.56, y: 0.97 },
+];
+
+// Shared SVG canvas with background rect — avoids repeating in every view branch
+function SvgCanvas({ width, height, bg, children }: {
+  width: number; height: number; bg: string; children: React.ReactNode;
+}) {
+  return (
+    <Svg width={width} height={height}>
+      <Rect x={0} y={0} width={width} height={height} fill={bg} />
+      {children}
+    </Svg>
+  );
+}
+
 export default function Constellation({
   logs,
   tasteSeeds,
@@ -47,23 +66,24 @@ export default function Constellation({
   const [view, setView] = useState<ConstellationView>('map');
   const isDark = mode === 'dark';
 
-  // Per-medium colours using theme tokens
-  const mediaColour: Record<string, string> = {
+  // Memoised so timelineStars doesn't invalidate on every render
+  const mediaColour = useMemo<Record<string, string>>(() => ({
     book:    colors.editorial,
     film:    colors.accent,
     album:   colors.streak,
     tv:      colors.ink2,
     podcast: colors.terra,
     game:    colors.accentd,
-  };
+  }), [colors.editorial, colors.accent, colors.streak, colors.ink2, colors.terra, colors.accentd]);
 
   // Mode-specific colours
-  const bgColour    = isDark ? '#030508'                : colors.bg3;
-  const lineColour  = isDark ? 'rgba(138,184,232,0.42)' : colors.accentg;
-  const starColour  = isDark ? '#8ab8e8'                : colors.editorial;
-  const dimColour   = isDark ? 'rgba(138,184,232,0.25)' : colors.accentg;
-  const labelColour = isDark ? 'rgba(224,234,248,0.5)'  : colors.ink3;
-  const gridColour  = isDark ? 'rgba(96,152,200,0.06)'  : 'rgba(0,0,0,0.04)';
+  const bgColour         = isDark ? '#030508'                : colors.bg3;
+  const lineColour       = isDark ? 'rgba(138,184,232,0.42)' : colors.accentg;
+  const starColour       = isDark ? '#8ab8e8'                : colors.editorial;
+  const dimColour        = isDark ? 'rgba(138,184,232,0.25)' : colors.accentg;
+  const labelColour      = isDark ? 'rgba(224,234,248,0.5)'  : colors.ink3;
+  const gridColour       = isDark ? 'rgba(96,152,200,0.06)'  : 'rgba(0,0,0,0.04)';
+  const regionLabelColour = isDark ? 'rgba(96,152,200,0.25)' : colors.ink3;
 
   // ── MAP data ───────────────────────────────────────────────────────────────
   const { stars: mapStars, lines: mapLines } = useMemo(
@@ -80,15 +100,15 @@ export default function Constellation({
   }), [mapStars, isDark]);
 
   // ── TIMELINE data ──────────────────────────────────────────────────────────
-  const timelineStars = useMemo(() => {
-    if (!logs.length) return [];
+  const { timelineStars, earliestLoggedAt } = useMemo(() => {
+    if (!logs.length) return { timelineStars: [], earliestLoggedAt: null };
     const sorted = [...logs].sort(
       (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime(),
     );
     const t0 = new Date(sorted[0].logged_at).getTime();
     const t1 = new Date(sorted[sorted.length - 1].logged_at).getTime();
     const tRange = t1 - t0 || 1;
-    return sorted.map((log, i) => {
+    const stars = sorted.map((log, i) => {
       const x = 0.04 + ((new Date(log.logged_at).getTime() - t0) / tRange) * 0.92;
       const y = log.rating
         ? 0.04 + (1 - (log.rating - 1) / 4) * 0.82   // high rating = top
@@ -103,6 +123,7 @@ export default function Constellation({
         rating: log.rating,
       };
     });
+    return { timelineStars: stars, earliestLoggedAt: sorted[0].logged_at };
   }, [logs, mediaColour, starColour]);
 
   // ── MEDIUM data ────────────────────────────────────────────────────────────
@@ -120,9 +141,9 @@ export default function Constellation({
   const maxCount = mediumCounts[0]?.count ?? 1;
 
   // ── LINKS data ─────────────────────────────────────────────────────────────
-  const { linkedStars, linkLines, connectedIds } = useMemo(() => {
-    const groups = buildConnectionGroups(mapStarsClamped.filter(s => s.mediaType !== 'taste'));
-    const linkedStars = mapStarsClamped;
+  const { linkedStars, linkLines, connectedIds, groupCount } = useMemo(() => {
+    const logStars = mapStarsClamped.filter(s => s.mediaType !== 'taste');
+    const groups = buildConnectionGroups(logStars);
     const connectedIds = new Set<string>();
     const linkLines: { x1: number; y1: number; x2: number; y2: number; colour: string }[] = [];
     for (const [, group] of groups) {
@@ -135,7 +156,7 @@ export default function Constellation({
         });
       }
     }
-    return { linkedStars, linkLines, connectedIds };
+    return { linkedStars: mapStarsClamped, linkLines, connectedIds, groupCount: groups.size };
   }, [mapStarsClamped, starColour]);
 
   // ── Grid lines ─────────────────────────────────────────────────────────────
@@ -171,12 +192,9 @@ export default function Constellation({
         : `${total} logged across ${types} media type${types !== 1 ? 's' : ''}`;
     }
     if (view === 'timeline') {
-      if (!logs.length) return 'No logs yet';
-      const sorted = [...logs].sort(
-        (a, b) => new Date(a.logged_at).getTime() - new Date(b.logged_at).getTime(),
-      );
-      const first = new Date(sorted[0].logged_at);
-      const monthName = first.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+      const monthName = earliestLoggedAt
+        ? new Date(earliestLoggedAt).toLocaleString('en-GB', { month: 'long', year: 'numeric' })
+        : '';
       const thisYear = new Date().getFullYear();
       const yearCount = logs.filter(l => new Date(l.logged_at).getFullYear() === thisYear).length;
       return `Logging since ${monthName} · ${yearCount} logged this year`;
@@ -187,14 +205,11 @@ export default function Constellation({
       return `Mostly ${MEDIA_DISPLAY[topMedium.key] ?? topMedium.key} · ${pct}% of your shelf`;
     }
     if (view === 'links') {
-      const groups = buildConnectionGroups(mapStarsClamped.filter(s => s.mediaType !== 'taste'));
-      const n = groups.size;
-      const linked = connectedIds.size;
-      if (!n) return 'No creators appear more than once yet';
-      return `${n} creator${n !== 1 ? 's' : ''} with multiple entries · ${linked} connected log${linked !== 1 ? 's' : ''}`;
+      if (!groupCount) return 'No creators appear more than once yet';
+      return `${groupCount} creator${groupCount !== 1 ? 's' : ''} with multiple entries · ${connectedIds.size} connected log${connectedIds.size !== 1 ? 's' : ''}`;
     }
     return '';
-  }, [logs, view, mediumCounts, connectedIds, mapStarsClamped]);
+  }, [logs, view, mediumCounts, connectedIds, groupCount, earliestLoggedAt]);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -224,8 +239,7 @@ export default function Constellation({
       {/* Canvas */}
       <View style={[styles.canvas, { width, height }]}>
         {view === 'map' && (
-          <Svg width={width} height={height}>
-            <Rect x={0} y={0} width={width} height={height} fill={bgColour} />
+          <SvgCanvas width={width} height={height} bg={bgColour}>
             {gridLines.map((l, i) => (
               <Line key={`g${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
                 stroke={gridColour} strokeWidth={0.5} />
@@ -248,26 +262,18 @@ export default function Constellation({
                 )}
               </G>
             ))}
-            {/* Region labels */}
-            {isDark && ([
-              { label: 'BOOKS',  x: 0.04, y: 0.03 },
-              { label: 'FILMS',  x: 0.56, y: 0.03 },
-              { label: 'ALBUMS', x: 0.04, y: 0.97 },
-              { label: 'TV',     x: 0.56, y: 0.97 },
-            ].map(r => (
+            {REGION_LABELS.map(r => (
               <SvgText key={r.label} x={sx(r.x)} y={sy(r.y)}
-                fontSize={6} fill={gridColour.replace('0.06', '0.25')}
+                fontSize={6} fill={regionLabelColour}
                 fontFamily="SpaceMono_400Regular">
                 {r.label}
               </SvgText>
-            )))}
-          </Svg>
+            ))}
+          </SvgCanvas>
         )}
 
         {view === 'timeline' && (
-          <Svg width={width} height={height}>
-            <Rect x={0} y={0} width={width} height={height} fill={bgColour} />
-            {/* Horizontal rating guide lines */}
+          <SvgCanvas width={width} height={height} bg={bgColour}>
             {[1,2,3,4,5].map(r => {
               const y = sy(0.04 + (1 - (r - 1) / 4) * 0.82);
               return (
@@ -289,7 +295,6 @@ export default function Constellation({
                   fill={star.colour} opacity={0.9} />
               </G>
             ))}
-            {/* X-axis label */}
             <SvgText x={sx(0.04)} y={height - 4} fontSize={6}
               fill={labelColour} fontFamily="SpaceMono_400Regular">
               EARLIER
@@ -298,12 +303,11 @@ export default function Constellation({
               fill={labelColour} fontFamily="SpaceMono_400Regular">
               MORE RECENT →
             </SvgText>
-          </Svg>
+          </SvgCanvas>
         )}
 
         {view === 'medium' && (
-          <Svg width={width} height={height}>
-            <Rect x={0} y={0} width={width} height={height} fill={bgColour} />
+          <SvgCanvas width={width} height={height} bg={bgColour}>
             {mediumCounts.length === 0 ? (
               <SvgText x={sx(0.5)} y={sy(0.5)} fontSize={11}
                 fill={labelColour} fontFamily="SpaceMono_400Regular" textAnchor="middle">
@@ -317,18 +321,14 @@ export default function Constellation({
               const colour = mediaColour[m.key] ?? starColour;
               return (
                 <G key={m.key}>
-                  {/* Label */}
                   <SvgText x={8} y={y + rowH * 0.7} fontSize={8}
                     fill={colour} fontFamily="SpaceMono_400Regular">
                     {MEDIA_DISPLAY[m.key] ?? m.key}
                   </SvgText>
-                  {/* Bar bg */}
                   <Rect x={width * 0.22} y={y} width={barMaxW} height={rowH}
                     fill={colour} opacity={0.08} rx={2} />
-                  {/* Bar fill */}
                   <Rect x={width * 0.22} y={y} width={barW} height={rowH}
                     fill={colour} opacity={0.7} rx={2} />
-                  {/* Count */}
                   <SvgText x={width * 0.22 + barW + 6} y={y + rowH * 0.7}
                     fontSize={8} fill={labelColour} fontFamily="SpaceMono_400Regular">
                     {m.count}
@@ -336,27 +336,23 @@ export default function Constellation({
                 </G>
               );
             })}
-          </Svg>
+          </SvgCanvas>
         )}
 
         {view === 'links' && (
-          <Svg width={width} height={height}>
-            <Rect x={0} y={0} width={width} height={height} fill={bgColour} />
+          <SvgCanvas width={width} height={height} bg={bgColour}>
             {gridLines.map((l, i) => (
               <Line key={`g${i}`} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
                 stroke={gridColour} strokeWidth={0.5} />
             ))}
-            {/* Dim unconnected stars */}
             {linkedStars.filter(s => s.mediaType !== 'taste' && !connectedIds.has(s.id)).map(s => (
               <Circle key={s.id} cx={sx(s.x)} cy={sy(s.y)} r={s.r * 0.7}
                 fill={starColour} opacity={0.12} />
             ))}
-            {/* Connection lines */}
             {linkLines.map((l, i) => (
               <Line key={`ll${i}`} x1={sx(l.x1)} y1={sy(l.y1)} x2={sx(l.x2)} y2={sy(l.y2)}
                 stroke={l.colour} strokeWidth={1} opacity={0.6} />
             ))}
-            {/* Connected stars */}
             {linkedStars.filter(s => connectedIds.has(s.id)).map(s => (
               <G key={s.id}>
                 <Circle cx={sx(s.x)} cy={sy(s.y)} r={s.r * 2.5}
@@ -377,7 +373,7 @@ export default function Constellation({
                 LOG MORE BY THE SAME CREATOR
               </SvgText>
             )}
-          </Svg>
+          </SvgCanvas>
         )}
       </View>
 

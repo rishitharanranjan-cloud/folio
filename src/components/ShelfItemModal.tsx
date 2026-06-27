@@ -36,8 +36,8 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
 
   // Keep last non-null log so content stays visible during the exit animation.
   const lastLog = useRef<LogEntry | null>(null);
-  if (log) lastLog.current = log;
-  const displayLog = lastLog.current;
+  useEffect(() => { if (log) lastLog.current = log; }, [log]);
+  const displayLog = log ?? lastLog.current;
 
   const [editing, setEditing]     = useState(false);
   const [draftRating, setDraftRating] = useState<number | null>(null);
