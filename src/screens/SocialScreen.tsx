@@ -10,14 +10,14 @@ import CommentSheet from '../components/CommentSheet';
 import { fonts } from '../theme/tokens';
 import { hexToRgb, clampAmbient, ambientToHex } from '../lib/ambientColour';
 
-const MEDIA_ICON: Record<string, string> = {
-  film: '🎬', book: '📖', album: '🎵', tv: '📺', podcast: '🎙', game: '🎮',
+const MEDIA_INITIAL: Record<string, string> = {
+  film: 'F', book: 'B', album: 'A', tv: 'TV', podcast: 'P', game: 'G',
 };
 
 const STATUS_VERB: Record<string, string> = {
   finished:  'finished',
-  current:   'is reading/watching',
-  want:      'wants to read/watch',
+  current:   'is enjoying',
+  want:      'wants to enjoy',
   abandoned: 'abandoned',
 };
 
@@ -61,7 +61,9 @@ function LogCard({
             <Image source={{ uri: item.cover_url }} style={styles.cover} resizeMode="cover" />
           ) : (
             <View style={[styles.cover, { backgroundColor: accentColour }]}>
-              <Text style={styles.coverIcon}>{MEDIA_ICON[item.media_type] ?? '·'}</Text>
+              <Text style={[styles.coverIcon, { color: '#fff', fontFamily: fonts.mono }]}>
+                {MEDIA_INITIAL[item.media_type] ?? '·'}
+              </Text>
             </View>
           )}
         </View>
@@ -83,11 +85,6 @@ function LogCard({
                 {timeAgo(item.logged_at)}
               </Text>
             </View>
-            {item.isOwn && (
-              <View style={[styles.ownBadge, { borderColor: colors.accent }]}>
-                <Text style={[styles.ownBadgeText, { color: colors.accent, fontFamily: fonts.mono }]}>YOU</Text>
-              </View>
-            )}
           </View>
 
           {/* Verb */}
@@ -232,8 +229,8 @@ export default function SocialScreen() {
     setRefreshing(false);
   };
 
-  const ownEvents  = events.filter((e) => (e.type === 'log' ? e.isOwn : e.isOwn));
-  const feedEvents = events.filter((e) => !(e.type === 'log' ? e.isOwn : e.isOwn));
+  const ownEvents  = events.filter((e) => e.isOwn);
+  const feedEvents = events.filter((e) => !e.isOwn);
   const showFindPeople = !hasFollowing;
 
   return (
@@ -243,7 +240,7 @@ export default function SocialScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>FEED</Text>
-        {activity.length > 0 && tab === 'activity' && (
+        {activity.length > 0 && tab === 'feed' && (
           <View style={[styles.badge, { backgroundColor: colors.editorial }]}>
             <Text style={[styles.badgeText, { color: '#fff', fontFamily: fonts.mono }]}>{activity.length}</Text>
           </View>
@@ -411,8 +408,6 @@ const styles = StyleSheet.create({
   metaText: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   userName: { fontSize: 10, letterSpacing: 1 },
   timeAgo: { fontSize: 9, letterSpacing: 0.5 },
-  ownBadge: { borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2 },
-  ownBadgeText: { fontSize: 8, letterSpacing: 1.5 },
   action: { fontSize: 12, fontStyle: 'italic', marginTop: -2 },
   title: { fontSize: 20, letterSpacing: 2, lineHeight: 22 },
   creator: { fontSize: 9, letterSpacing: 1 },
