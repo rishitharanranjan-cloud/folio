@@ -14,6 +14,7 @@ import {
 import WrappedScreen from './WrappedScreen';
 import ImportScreen from './onboarding/ImportScreen';
 import SocialScreen from './SocialScreen';
+import { enrichCovers } from '../lib/enrichCovers';
 import * as Notifications from 'expo-notifications';
 import { scheduleWeeklyNudge, cancelWeeklyNudge } from '../lib/habitNudge';
 import { Platform } from 'react-native';
@@ -55,6 +56,8 @@ export default function ProfileScreen() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [wrappedOpen, setWrappedOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [enriching, setEnriching] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState('');
   const [nudgesOn, setNudgesOn] = useState(false);
 
   // Initialise nudge toggle from scheduled notifications
@@ -463,6 +466,30 @@ export default function ProfileScreen() {
               </Text>
             </TouchableOpacity>
           )}
+
+          <TouchableOpacity
+            style={[styles.settingsRow, { borderColor: colors.border }]}
+            onPress={async () => {
+              if (enriching || !user) return;
+              setEnriching(true);
+              setEnrichProgress('Starting…');
+              const { enriched } = await enrichCovers(user.id, (done, total) => {
+                setEnrichProgress(`${done} / ${total}`);
+              });
+              setEnriching(false);
+              setEnrichProgress('');
+              Alert.alert('Done', `${enriched} covers refreshed.`);
+            }}
+            activeOpacity={0.7}
+            disabled={enriching}
+          >
+            <Text style={[styles.settingsLabel, { color: colors.ink, fontFamily: fonts.ui }]}>
+              Refresh cover art
+            </Text>
+            <Text style={[styles.settingsValue, { color: colors.ink3, fontFamily: fonts.mono }]}>
+              {enriching ? enrichProgress : '→'}
+            </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.settingsRow, { borderColor: colors.border }]}

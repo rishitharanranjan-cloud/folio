@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase';
 import { parseGoodreads, parseLetterboxd } from '../../lib/importParsers';
 import { fonts } from '../../theme/tokens';
 import * as haptics from '../../lib/haptics';
+import { enrichCovers } from '../../lib/enrichCovers';
 
 interface Props {
   onNext: () => void;
@@ -93,6 +94,8 @@ export default function ImportScreen({ onNext, onSkip }: Props) {
 
       setResults(prev => ({ ...prev, [service]: { imported, skipped } }));
       haptics.success();
+      // Fire cover enrichment in the background — don't await
+      if (imported > 0 && user) enrichCovers(user.id).catch(() => {});
       Alert.alert(
         'Import complete',
         `${imported} items added to your shelf.\n${skipped > 0 ? `${skipped} skipped (already logged or errors).` : ''}`,
