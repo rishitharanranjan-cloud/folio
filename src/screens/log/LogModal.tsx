@@ -23,7 +23,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
 import { searchMedia, buildManualEntry, type MediaType, type SearchResult } from '../../lib/mediaSearch';
-import { getAmbientColour, ambientToRgb, ambientToHex } from '../../lib/ambientColour';
+import { getAmbientColour, clampAmbient, ambientToRgb, ambientToHex } from '../../lib/ambientColour';
 import { checkTrailCompletion } from '../../lib/trailCompletion';
 import { fonts } from '../../theme/tokens';
 
@@ -51,7 +51,7 @@ interface Props {
 }
 
 export default function LogModal({ onClose, onLogged }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const { user } = useAuthStore();
 
   const [mediaType, setMediaType] = useState<MediaType>('film');
@@ -73,10 +73,11 @@ export default function LogModal({ onClose, onLogged }: Props) {
 
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Ambient colour based on selected item
-  const ambientRgb = selected ? getAmbientColour(selected.title) : null;
+  // Ambient colour based on selected item — clamped for UI chrome
+  const ambientRaw = selected ? getAmbientColour(selected.title) : null;
+  const ambientRgb = ambientRaw ? clampAmbient(ambientRaw, mode === 'dark') : null;
   const accentColour = ambientRgb ? ambientToRgb(ambientRgb) : colors.accent;
-  const glowColour   = ambientRgb ? ambientToRgb(ambientRgb, 0.15) : 'transparent';
+  const glowColour   = ambientRgb ? ambientToRgb(ambientRgb, 0.18) : 'transparent';
 
   // Animate glow opacity
   const glowOpacity = useSharedValue(0);
@@ -133,7 +134,7 @@ export default function LogModal({ onClose, onLogged }: Props) {
         review: review.trim() || null,
         logged_at: consumedDate.toISOString(),
         cover_url: selected.coverUrl,
-        dominant_colour: ambientRgb ? ambientToHex(ambientRgb) : null,
+        dominant_colour: ambientRaw ? ambientToHex(ambientRaw) : null,
         external_id: selected.externalId,
       });
       if (error) throw error;

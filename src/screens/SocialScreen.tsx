@@ -8,6 +8,7 @@ import { useThemeStore } from '../store/themeStore';
 import { useFeed, type FeedLog, type FeedTrailComplete, type ActivityItem } from '../hooks/useFeed';
 import CommentSheet from '../components/CommentSheet';
 import { fonts } from '../theme/tokens';
+import { hexToRgb, clampAmbient, ambientToHex } from '../lib/ambientColour';
 
 const MEDIA_ICON: Record<string, string> = {
   film: '🎬', book: '📖', album: '🎵', tv: '📺', podcast: '🎙', game: '🎮',
@@ -34,14 +35,19 @@ function timeAgo(dateStr: string): string {
 
 // ── Log card ───────────────────────────────────────────────────────────────
 function LogCard({
-  item, colors, onReact, onComment,
+  item, colors, mode, onReact, onComment,
 }: {
   item: FeedLog;
   colors: any;
+  mode: 'dark' | 'light';
   onReact: (id: string, hasReacted: boolean) => void;
   onComment: (id: string, title: string) => void;
 }) {
-  const accentColour = item.dominant_colour ?? colors.accent;
+  const rawHex = item.dominant_colour;
+  const rawRgb = rawHex ? hexToRgb(rawHex) : null;
+  const accentColour = rawRgb
+    ? ambientToHex(clampAmbient(rawRgb, mode === 'dark'))
+    : colors.accent;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.bg2, borderColor: colors.border }]}>
@@ -214,7 +220,7 @@ function ActivityCard({ item, colors }: { item: ActivityItem; colors: any }) {
 type Tab = 'feed' | 'activity';
 
 export default function SocialScreen() {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const { events, activity, loading, hasFollowing, refetch, toggleReaction, updateCommentCount } = useFeed();
   const [tab, setTab] = useState<Tab>('feed');
   const [refreshing, setRefreshing] = useState(false);
@@ -309,7 +315,7 @@ export default function SocialScreen() {
               <Text style={[styles.sectionLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>YOUR LOGS</Text>
               {ownEvents.slice(0, 5).map((e) =>
                 e.type === 'log'
-                  ? <LogCard key={e.id} item={e} colors={colors} onReact={toggleReaction} onComment={(id, title) => setCommentTarget({ id, title })} />
+                  ? <LogCard key={e.id} item={e} colors={colors} mode={mode} onReact={toggleReaction} onComment={(id, title) => setCommentTarget({ id, title })} />
                   : <TrailCompleteCard key={e.id} item={e} colors={colors} />
               )}
             </View>
@@ -321,7 +327,7 @@ export default function SocialScreen() {
               <Text style={[styles.sectionLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>FOLLOWING</Text>
               {feedEvents.map((e) =>
                 e.type === 'log'
-                  ? <LogCard key={e.id} item={e} colors={colors} onReact={toggleReaction} onComment={(id, title) => setCommentTarget({ id, title })} />
+                  ? <LogCard key={e.id} item={e} colors={colors} mode={mode} onReact={toggleReaction} onComment={(id, title) => setCommentTarget({ id, title })} />
                   : <TrailCompleteCard key={e.id} item={e} colors={colors} />
               )}
             </View>

@@ -12,7 +12,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
 import { type SearchResult } from '../../lib/mediaSearch';
-import { getAmbientColour, ambientToRgb } from '../../lib/ambientColour';
+import { getAmbientColour, clampAmbient, ambientToRgb } from '../../lib/ambientColour';
 import { fonts } from '../../theme/tokens';
 
 const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
@@ -25,10 +25,10 @@ interface Props {
 }
 
 export default function ConfirmationScreen({ item, rating, review, onDone }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const { user } = useAuthStore();
-  const ambientRgb = getAmbientColour(item.title);
-  const bgColour  = ambientToRgb(ambientRgb, 0.9);
+  const ambientRgb = clampAmbient(getAmbientColour(item.title), mode === 'dark');
+  const bgColour  = ambientToRgb(ambientRgb, 0.85);
   const accentCol = ambientToRgb(ambientRgb);
 
   const [totalLogged, setTotalLogged] = useState<number | null>(null);
