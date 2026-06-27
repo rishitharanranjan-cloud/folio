@@ -20,12 +20,8 @@ export default function DVDCase({ log, onSelect }: Props) {
   const [pressed, setPressed] = useState(false);
   const rotateY = useSharedValue(0);
 
-  const spineStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(rotateY.value > 0.5 ? 0 : 1, { duration: 150 }),
-  }));
-  const frontStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(rotateY.value > 0.5 ? 1 : 0, { duration: 150 }),
-  }));
+  const spineStyle = useAnimatedStyle(() => ({ opacity: 1 - rotateY.value }));
+  const frontStyle = useAnimatedStyle(() => ({ opacity: rotateY.value }));
 
   const onPress = () => {
     const next = !pressed;

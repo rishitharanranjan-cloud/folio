@@ -5,7 +5,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import Animated, {
-  useSharedValue,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
@@ -23,7 +22,6 @@ const NOTCH_W = 16;
 export default function GameCartridge({ log, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
-  const slideX = useSharedValue(0);
 
   const cardStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: withTiming(pressed ? CART_W + 8 : 0, { duration: 280 }) }],

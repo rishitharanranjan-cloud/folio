@@ -19,7 +19,6 @@ interface Props { log: LogEntry; onSelect?: (log: LogEntry) => void }
 export default function CassetteTape({ log, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
-  const flip = useSharedValue(0);
 
   const sideStyle  = useAnimatedStyle(() => ({ opacity: withTiming(pressed ? 0 : 1, { duration: 200 }) }));
   const frontStyle = useAnimatedStyle(() => ({ opacity: withTiming(pressed ? 1 : 0, { duration: 200 }) }));
@@ -36,7 +35,7 @@ export default function CassetteTape({ log, onSelect }: Props) {
       </Animated.View>
 
       {/* Front (pressed) */}
-      <Animated.View style={[styles.front, { backgroundColor: colours.cassette ?? '#1a1a1a', borderColor: colour }, frontStyle]}>
+      <Animated.View style={[styles.front, { backgroundColor: '#1e1e1e', borderColor: colour }, frontStyle]}>
         {/* Label strip */}
         <View style={[styles.labelStrip, { backgroundColor: colour }]}>
           <Text style={[styles.labelTitle, { color: '#fff', fontFamily: fonts.display }]} numberOfLines={2}>
@@ -70,9 +69,6 @@ export default function CassetteTape({ log, onSelect }: Props) {
     </TouchableOpacity>
   );
 }
-
-// fallback colours object
-const colours: Record<string, string> = { cassette: '#1e1e1e' };
 
 const styles = StyleSheet.create({
   wrapper: { alignItems: 'center' },
