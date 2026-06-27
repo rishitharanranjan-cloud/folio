@@ -9,16 +9,15 @@ interface Props {
   onPress: () => void;
 }
 
-const TAG_COLOURS: Record<string, string> = {
-  filmmaker: '#6098c8',
-  movement:  '#a87030',
-  genre:     '#5aaa74',
-  author:    '#a87030',
-  artist:    '#d0682a',
-};
-
 export default function TrailCard({ trail, onPress }: Props) {
   const { colors } = useThemeStore();
+  const TAG_COLOURS: Record<string, string> = {
+    filmmaker: colors.accent,
+    movement:  colors.editorial,
+    genre:     colors.streak,
+    author:    colors.terra,
+    artist:    colors.accentd,
+  };
   const tagColour = TAG_COLOURS[trail.tag ?? ''] ?? colors.editorial;
   const progress = trail.stop_count > 0
     ? Math.round((trail.stopsLogged / trail.stop_count) * 100)
