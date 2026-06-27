@@ -3,7 +3,7 @@
  * MAP: media-type star clusters · TIMELINE: chronological scatter
  * MEDIUM: bar chart by type   · LINKS: creator connection graph
  */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import Svg, { Circle, Line, Text as SvgText, Rect, G } from 'react-native-svg';
 import { useThemeStore } from '../store/themeStore';

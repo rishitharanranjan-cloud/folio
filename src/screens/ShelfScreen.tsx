@@ -22,7 +22,7 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 type Tab = 'book' | 'film' | 'tv' | 'album' | 'podcast' | 'game';
 type SortKey = 'date' | 'rating' | 'title' | 'year';
-type StatusFilter = 'all' | 'completed' | 'in_progress' | 'dropped';
+type StatusFilter = 'all' | 'completed' | 'in_progress' | 'dropped' | 'abandoned';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'date',   label: 'DATE' },
@@ -36,15 +36,16 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'completed',   label: 'DONE' },
   { key: 'in_progress', label: 'IN PROGRESS' },
   { key: 'dropped',     label: 'DROPPED' },
+  { key: 'abandoned',   label: 'ABANDONED' },
 ];
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'book',    label: 'BOOKS',   icon: '📖' },
-  { key: 'film',    label: 'FILMS',   icon: '🎬' },
-  { key: 'tv',      label: 'TV',      icon: '📺' },
-  { key: 'album',   label: 'ALBUMS',  icon: '🎵' },
-  { key: 'podcast', label: 'PODS',    icon: '🎙' },
-  { key: 'game',    label: 'GAMES',   icon: '🎮' },
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'book',    label: 'BOOKS'  },
+  { key: 'film',    label: 'FILMS'  },
+  { key: 'tv',      label: 'TV'     },
+  { key: 'album',   label: 'ALBUMS' },
+  { key: 'podcast', label: 'PODS'   },
+  { key: 'game',    label: 'GAMES'  },
 ];
 
 const EMPTY_MESSAGES: Record<Tab, { title: string; sub: string }> = {
@@ -229,7 +230,6 @@ export default function ShelfScreen() {
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [showControls, setShowControls] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
 
   const lastLog = rawLogs[0]?.logged_at ?? null;
