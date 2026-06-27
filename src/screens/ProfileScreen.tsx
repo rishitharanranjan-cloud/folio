@@ -14,6 +14,7 @@ import {
 import WrappedScreen from './WrappedScreen';
 import ImportScreen from './onboarding/ImportScreen';
 import SocialScreen from './SocialScreen';
+import * as Notifications from 'expo-notifications';
 import { scheduleWeeklyNudge, cancelWeeklyNudge } from '../lib/habitNudge';
 import { Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -55,6 +56,14 @@ export default function ProfileScreen() {
   const [wrappedOpen, setWrappedOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [nudgesOn, setNudgesOn] = useState(false);
+
+  // Initialise nudge toggle from scheduled notifications
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    Notifications.getAllScheduledNotificationsAsync().then(
+      (pending) => setNudgesOn(pending.length > 0),
+    );
+  }, []);
   const [feedOpen, setFeedOpen] = useState(false);
   const [annualGoal, setAnnualGoal] = useState<number | null>(null);
   const [goalInput, setGoalInput] = useState('');
@@ -275,7 +284,7 @@ export default function ProfileScreen() {
                   {currentStreak === 1 ? 'WEEK STREAK' : 'WEEK STREAK'}
                 </Text>
                 {currentStreak > 0 && (
-                  <Text style={[styles.streakSub, { color: colors.streak, fontFamily: fonts.mono }]}>🔥 ACTIVE</Text>
+                  <Text style={[styles.streakSub, { color: colors.streak, fontFamily: fonts.mono }]}>ACTIVE</Text>
                 )}
               </View>
               <View style={[styles.streakDivider, { backgroundColor: colors.border }]} />
@@ -365,13 +374,6 @@ export default function ProfileScreen() {
             />
           )}
 
-          {/* Mode labels */}
-          <View style={styles.modeLegend}>
-            <View style={[styles.legendDot, { backgroundColor: mode === 'dark' ? '#8ab8e8' : '#a87018' }]} />
-            <Text style={[styles.legendText, { color: colors.ink3, fontFamily: fonts.mono }]}>
-              {mode === 'dark' ? 'NORDIC FROST · ICE BLUE' : 'VINTAGE ARCHIVE · WARM GOLD'}
-            </Text>
-          </View>
         </View>
 
         {/* Year in Culture */}
@@ -640,16 +642,6 @@ const styles = StyleSheet.create({
   },
   constellationSub: { fontSize: 12, fontStyle: 'italic' },
   constellationLoader: { height: 200, alignItems: 'center', justifyContent: 'center' },
-  modeLegend: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  legendDot: { width: 6, height: 6, borderRadius: 3 },
-  legendText: { fontSize: 9, letterSpacing: 1.5 },
-
   sectionHeading: { fontSize: 10, letterSpacing: 2 },
 
   wrappedSection: {
