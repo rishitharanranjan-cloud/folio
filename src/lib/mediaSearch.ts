@@ -55,24 +55,29 @@ async function searchTMDB(query: string, type: 'film' | 'tv'): Promise<SearchRes
 // ─── Open Library ──────────────────────────────────────────────────────────
 
 async function searchBooks(query: string): Promise<SearchResult[]> {
-  // Append language filter to the query string (Open Library full-text syntax)
-  const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=20&fields=key,title,author_name,first_publish_year,cover_i,edition_count&sort=editions`;
+  const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(query)}&language=eng&limit=20&fields=key,title,author_name,first_publish_year,cover_i,edition_count&sort=editions`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const data = await res.json();
 
-  return (data.docs ?? [])
-    .slice(0, 10)
-    .map((item: any) => ({
-      id:          item.key,
-      title:       item.title ?? '',
-      creator:     (item.author_name ?? []).slice(0, 2).join(', '),
-      year:        item.first_publish_year ?? null,
-      coverUrl:    item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg` : null,
-      coverUrlHD:  item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg` : null,
-      mediaType:   'book' as MediaType,
-      externalId:  item.key,
-    }));
+  const results = (data.docs ?? []).map((item: any) => ({
+    id:          item.key,
+    title:       item.title ?? '',
+    creator:     (item.author_name ?? []).slice(0, 2).join(', '),
+    year:        item.first_publish_year ?? null,
+    coverUrl:    item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg` : null,
+    coverUrlHD:  item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg` : null,
+    mediaType:   'book' as MediaType,
+    externalId:  item.key,
+  }));
+
+  // Prefer results whose title contains the query words (English editions first)
+  const q = query.toLowerCase();
+  return results.sort((a: any, b: any) => {
+    const aMatch = a.title.toLowerCase().includes(q) ? 0 : 1;
+    const bMatch = b.title.toLowerCase().includes(q) ? 0 : 1;
+    return aMatch - bMatch;
+  }).slice(0, 8);
 }
 
 // ─── MusicBrainz ───────────────────────────────────────────────────────────
