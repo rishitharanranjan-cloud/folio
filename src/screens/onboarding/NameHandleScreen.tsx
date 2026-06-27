@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -25,8 +25,9 @@ export default function NameHandleScreen({ onNext }: Props) {
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
   const [loading, setLoading] = useState(false);
+  const handleRef = useRef<TextInput>(null);
 
-  const canContinue = name.trim().length > 0 && handle.trim().length > 1;
+  const canContinue = name.trim().length > 0 && handle.trim().length >= 3;
 
   const handleSave = async () => {
     if (!canContinue || !user) return;
@@ -52,7 +53,7 @@ export default function NameHandleScreen({ onNext }: Props) {
       style={[styles.container, { backgroundColor: colors.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={[styles.watermark, { color: colors.ink }]}>NAME</Text>
+      <Text style={[styles.watermark, { color: colors.ink, fontFamily: fonts.display }]}>NAME</Text>
 
       <View style={styles.content}>
         <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>
@@ -72,6 +73,9 @@ export default function NameHandleScreen({ onNext }: Props) {
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
+              returnKeyType="next"
+              onSubmitEditing={() => handleRef.current?.focus()}
+              blurOnSubmit={false}
             />
           </View>
 
@@ -80,6 +84,7 @@ export default function NameHandleScreen({ onNext }: Props) {
             <View style={[styles.handleRow, { backgroundColor: colors.bg3, borderColor: colors.border2 }]}>
               <Text style={[styles.at, { color: colors.ink3, fontFamily: fonts.mono }]}>@</Text>
               <TextInput
+                ref={handleRef}
                 style={[styles.handleInput, { color: colors.ink, fontFamily: fonts.mono }]}
                 placeholder="yourhandle"
                 placeholderTextColor={colors.ink3}
@@ -87,6 +92,8 @@ export default function NameHandleScreen({ onNext }: Props) {
                 onChangeText={(t) => setHandle(t.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="done"
+                onSubmitEditing={handleSave}
               />
             </View>
           </View>

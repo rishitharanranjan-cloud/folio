@@ -3,7 +3,7 @@
  * Shows 3 featured trails. Users can join one (or skip).
  * Joining gives them an immediate to-do list on their shelf.
  */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
   ScrollView,
@@ -20,14 +20,6 @@ interface FeaturedTrail {
   tag: string | null;
   stop_count: number;
 }
-
-const TAG_COLOURS: Record<string, string> = {
-  filmmaker: '#6098c8',
-  movement:  '#a87030',
-  genre:     '#5aaa74',
-  author:    '#a87030',
-  artist:    '#d0682a',
-};
 
 // Curated list of trail titles to feature in onboarding
 const FEATURED_TITLES = [
@@ -50,6 +42,14 @@ export default function TrailPickScreen({ onNext }: Props) {
   const [joining, setJoining] = useState<string | null>(null);
   const [joined, setJoined] = useState<Set<string>>(new Set());
 
+  const tagColour = useMemo<Record<string, string>>(() => ({
+    filmmaker: colors.accent,
+    movement:  colors.editorial,
+    genre:     colors.streak,
+    author:    colors.terra,
+    artist:    colors.accentd,
+  }), [colors]);
+
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase
@@ -66,11 +66,11 @@ export default function TrailPickScreen({ onNext }: Props) {
   const handleJoin = async (trailId: string) => {
     if (!user || joining) return;
     setJoining(trailId);
-    await supabase.from('user_trails').upsert({
+    const { error } = await supabase.from('user_trails').upsert({
       user_id: user.id,
       trail_id: trailId,
     });
-    setJoined((prev) => new Set([...prev, trailId]));
+    if (!error) setJoined((prev) => new Set([...prev, trailId]));
     setJoining(null);
   };
 
@@ -97,7 +97,7 @@ export default function TrailPickScreen({ onNext }: Props) {
             {trails.map((trail) => {
               const isJoined = joined.has(trail.id);
               const isJoining = joining === trail.id;
-              const tagColour = TAG_COLOURS[trail.tag ?? ''] ?? colors.editorial;
+              const colour = tagColour[trail.tag ?? ''] ?? colors.editorial;
               return (
                 <View
                   key={trail.id}
@@ -111,7 +111,7 @@ export default function TrailPickScreen({ onNext }: Props) {
                   )}
 
                   <View style={styles.cardTop}>
-                    <View style={[styles.tag, { backgroundColor: tagColour }]}>
+                    <View style={[styles.tag, { backgroundColor: colour }]}>
                       <Text style={[styles.tagText, { color: '#fff', fontFamily: fonts.mono }]}>
                         {(trail.tag ?? 'TRAIL').toUpperCase()}
                       </Text>
@@ -174,7 +174,7 @@ export default function TrailPickScreen({ onNext }: Props) {
           </TouchableOpacity>
           {joined.size === 0 && (
             <Text style={[styles.skipNote, { color: colors.ink3, fontFamily: fonts.body }]}>
-              You can browse all trails in Discover.
+              You can browse all trails in the Trails tab.
             </Text>
           )}
         </View>
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   tagText: { fontSize: 9, letterSpacing: 1.5 },
   stops: { fontSize: 9, letterSpacing: 1.5 },
   cardTitle: { fontSize: 22, letterSpacing: 2, lineHeight: 24 },
-  cardDesc: { fontSize: 13, fontStyle: 'italic', lineHeight: 18, color: '#a0b8d4' },
+  cardDesc: { fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
   joinBtn: {
     paddingVertical: 10,
     alignItems: 'center',
