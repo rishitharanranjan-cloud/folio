@@ -9,6 +9,7 @@ import { useFeed, type FeedLog, type FeedTrailComplete, type ActivityItem } from
 import CommentSheet from '../components/CommentSheet';
 import { fonts } from '../theme/tokens';
 import { hexToRgb, clampAmbient, ambientToHex } from '../lib/ambientColour';
+import { timeAgo } from '../lib/timeAgo';
 
 const MEDIA_INITIAL: Record<string, string> = {
   film: 'F', book: 'B', album: 'A', tv: 'TV', podcast: 'P', game: 'G',
@@ -21,17 +22,6 @@ const STATUS_VERB: Record<string, string> = {
   abandoned: 'abandoned',
 };
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins  = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days  = Math.floor(diff / 86400000);
-  if (mins < 2)   return 'just now';
-  if (mins < 60)  return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7)   return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-}
 
 // ── Log card ───────────────────────────────────────────────────────────────
 function LogCard({

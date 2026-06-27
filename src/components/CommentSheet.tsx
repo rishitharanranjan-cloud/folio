@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity,
   ScrollView, TextInput, KeyboardAvoidingView, Platform,
-  ActivityIndicator,
+  ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { fonts } from '../theme/tokens';
+import { timeAgo } from '../lib/timeAgo';
+import * as haptics from '../lib/haptics';
 
 export interface Comment {
   id: string;
@@ -26,17 +28,6 @@ interface Props {
   onCountChange?: (logId: string, count: number) => void;
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins  = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days  = Math.floor(diff / 86400000);
-  if (mins < 2)   return 'just now';
-  if (mins < 60)  return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7)   return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-}
 
 export default function CommentSheet({ logId, logTitle, onClose, onCountChange }: Props) {
   const { colors } = useThemeStore();
@@ -45,6 +36,7 @@ export default function CommentSheet({ logId, logTitle, onClose, onCountChange }
   const [loading, setLoading] = useState(false);
   const [body, setBody] = useState('');
   const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
   const fetchComments = useCallback(async () => {
@@ -67,7 +59,7 @@ export default function CommentSheet({ logId, logTitle, onClose, onCountChange }
     setComments(mapped);
     setLoading(false);
     onCountChange?.(logId, mapped.length);
-  }, [logId]);
+  }, [logId, onCountChange]);
 
   useEffect(() => {
     if (logId) {
@@ -80,6 +72,7 @@ export default function CommentSheet({ logId, logTitle, onClose, onCountChange }
   const handlePost = async () => {
     if (!user || !logId || !body.trim()) return;
     setPosting(true);
+    setPostError(null);
     const { data, error } = await supabase
       .from('comments')
       .insert({ user_id: user.id, log_id: logId, body: body.trim() })
@@ -99,16 +92,28 @@ export default function CommentSheet({ logId, logTitle, onClose, onCountChange }
       setComments(updated);
       onCountChange?.(logId, updated.length);
       setBody('');
+      haptics.success();
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    } else if (error) {
+      haptics.warn();
+      setPostError('Failed to post. Try again.');
     }
     setPosting(false);
   };
 
   const handleDelete = async (commentId: string) => {
-    await supabase.from('comments').delete().eq('id', commentId);
+    const previous = comments;
     const updated = comments.filter((c) => c.id !== commentId);
     setComments(updated);
     if (logId) onCountChange?.(logId, updated.length);
+    const { error } = await supabase.from('comments').delete().eq('id', commentId);
+    if (error) {
+      setComments(previous);
+      if (logId) onCountChange?.(logId, previous.length);
+      haptics.warn();
+    } else {
+      haptics.tapHeavy();
+    }
   };
 
   return (
@@ -176,7 +181,14 @@ export default function CommentSheet({ logId, logTitle, onClose, onCountChange }
                       {c.body}
                     </Text>
                     {c.user_id === user?.id && (
-                      <TouchableOpacity onPress={() => handleDelete(c.id)}>
+                      <TouchableOpacity onPress={() => Alert.alert(
+                        'Delete comment',
+                        'Remove this comment?',
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Delete', style: 'destructive', onPress: () => handleDelete(c.id) },
+                        ],
+                      )}>
                         <Text style={[sheet.deleteText, { color: colors.ink3, fontFamily: fonts.mono }]}>DELETE</Text>
                       </TouchableOpacity>
                     )}
@@ -185,6 +197,13 @@ export default function CommentSheet({ logId, logTitle, onClose, onCountChange }
               ))
             )}
           </ScrollView>
+
+          {/* Post error */}
+          {postError && (
+            <Text style={[sheet.postError, { color: colors.terra, fontFamily: fonts.mono }]}>
+              {postError}
+            </Text>
+          )}
 
           {/* Input bar */}
           <View style={[sheet.inputBar, { borderTopColor: colors.border, backgroundColor: colors.bg2 }]}>
@@ -264,4 +283,5 @@ const sheet = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   postBtnText: { fontSize: 11, letterSpacing: 2 },
+  postError: { fontSize: 9, letterSpacing: 1, paddingHorizontal: 16, paddingBottom: 6 },
 });
