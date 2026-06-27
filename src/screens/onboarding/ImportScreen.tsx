@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
 import { parseGoodreads, parseLetterboxd } from '../../lib/importParsers';
 import { fonts } from '../../theme/tokens';
+import * as haptics from '../../lib/haptics';
 
 interface Props {
   onNext: () => void;
@@ -91,6 +92,7 @@ export default function ImportScreen({ onNext, onSkip }: Props) {
       }
 
       setResults(prev => ({ ...prev, [service]: { imported, skipped } }));
+      haptics.success();
       Alert.alert(
         'Import complete',
         `${imported} items added to your shelf.\n${skipped > 0 ? `${skipped} skipped (already logged or errors).` : ''}`,
@@ -164,7 +166,7 @@ export default function ImportScreen({ onNext, onSkip }: Props) {
             activeOpacity={0.8}
           >
             <Text style={[styles.continueBtnText, { color: colors.accentt, fontFamily: fonts.mono }]}>
-              {anyImported ? 'CONTINUE →' : 'CONTINUE WITHOUT IMPORTING →'}
+              CONTINUE →
             </Text>
           </TouchableOpacity>
 
