@@ -14,9 +14,9 @@ import { fonts } from '../../theme/tokens';
 import { getAmbientColour, ambientToHex } from '../../lib/ambientColour';
 import type { LogEntry } from '../../hooks/useLogs';
 
-interface Props { log: LogEntry }
+interface Props { log: LogEntry; onSelect?: (log: LogEntry) => void }
 
-export default function CassetteTape({ log }: Props) {
+export default function CassetteTape({ log, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
   const flip = useSharedValue(0);
@@ -27,7 +27,7 @@ export default function CassetteTape({ log }: Props) {
   const colour = log.dominant_colour ?? ambientToHex(getAmbientColour(log.title));
 
   return (
-    <TouchableOpacity onPress={() => setPressed((p) => !p)} activeOpacity={0.9} style={styles.wrapper}>
+    <TouchableOpacity onPress={() => setPressed((p) => !p)} onLongPress={() => onSelect?.(log)} activeOpacity={0.9} style={styles.wrapper}>
       {/* Side (rest) */}
       <Animated.View style={[styles.side, { backgroundColor: colour }, sideStyle]}>
         <Text style={[styles.sideText, { color: 'rgba(255,255,255,0.85)', fontFamily: fonts.mono }]} numberOfLines={6}>

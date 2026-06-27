@@ -11,10 +11,10 @@ import { fonts } from '../../theme/tokens';
 import { getAmbientColour, ambientToHex } from '../../lib/ambientColour';
 import type { LogEntry } from '../../hooks/useLogs';
 
-interface Props { log: LogEntry }
+interface Props { log: LogEntry; onSelect?: (log: LogEntry) => void }
 const SIZE = 110;
 
-export default function VinylRecord({ log }: Props) {
+export default function VinylRecord({ log, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
   const vinylY  = useSharedValue(0);
@@ -33,7 +33,7 @@ export default function VinylRecord({ log }: Props) {
   };
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.wrapper}>
+    <TouchableOpacity onPress={onPress} onLongPress={() => onSelect?.(log)} activeOpacity={0.9} style={styles.wrapper}>
       {/* Vinyl disc (behind sleeve) */}
       <Animated.View style={[styles.vinyl, vinylStyle]}>
         <View style={[styles.vinylDisc, { width: SIZE, height: SIZE, borderRadius: SIZE / 2, backgroundColor: '#111' }]}>

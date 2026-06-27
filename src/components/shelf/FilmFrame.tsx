@@ -12,7 +12,7 @@ import { fonts } from '../../theme/tokens';
 import { getAmbientColour, ambientToHex } from '../../lib/ambientColour';
 import type { LogEntry } from '../../hooks/useLogs';
 
-interface Props { log: LogEntry }
+interface Props { log: LogEntry; onSelect?: (log: LogEntry) => void }
 
 const FRAME_W = 100;
 const FRAME_H = 148;
@@ -20,7 +20,7 @@ const HOLE_W  = 10;
 const HOLE_H  = 7;
 const HOLES   = 5;
 
-export default function FilmFrame({ log }: Props) {
+export default function FilmFrame({ log, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
   const liftY   = useSharedValue(0);
@@ -39,7 +39,7 @@ export default function FilmFrame({ log }: Props) {
   };
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+    <TouchableOpacity onPress={onPress} onLongPress={() => onSelect?.(log)} activeOpacity={0.9}>
       <Animated.View style={[styles.strip, frameStyle]}>
         {/* Top sprocket row */}
         <View style={[styles.sprocketRow, { backgroundColor: '#1a1a1a' }]}>

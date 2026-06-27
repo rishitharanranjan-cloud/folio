@@ -14,13 +14,13 @@ import { fonts } from '../../theme/tokens';
 import { getAmbientColour, ambientToHex } from '../../lib/ambientColour';
 import type { LogEntry } from '../../hooks/useLogs';
 
-interface Props { log: LogEntry }
+interface Props { log: LogEntry; onSelect?: (log: LogEntry) => void }
 
 const CART_W = 50;
 const CART_H = 70;
 const NOTCH_W = 16;
 
-export default function GameCartridge({ log }: Props) {
+export default function GameCartridge({ log, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
   const slideX = useSharedValue(0);
@@ -35,7 +35,7 @@ export default function GameCartridge({ log }: Props) {
   const colour = log.dominant_colour ?? ambientToHex(getAmbientColour(log.title));
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.wrapper}>
+    <TouchableOpacity onPress={onPress} onLongPress={() => onSelect?.(log)} activeOpacity={0.9} style={styles.wrapper}>
       {/* Cartridge body */}
       <View style={[styles.cartridge, { backgroundColor: colour }]}>
         {/* Notch cutout at top */}

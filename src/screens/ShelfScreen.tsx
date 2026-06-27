@@ -4,6 +4,7 @@ import {
   ActivityIndicator, RefreshControl, Dimensions,
 } from 'react-native';
 import WeeklyNudgeBanner from '../components/WeeklyNudgeBanner';
+import ShelfItemModal from '../components/ShelfItemModal';
 import { shouldShowInAppNudge } from '../lib/habitNudge';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '../store/themeStore';
@@ -58,7 +59,7 @@ const EMPTY_MESSAGES: Record<Tab, { title: string; sub: string }> = {
 // ── Book shelf — rows of spines with a wooden plank beneath each row ──────────
 const SPINE_ROW_W = SCREEN_W - 48;
 
-function BookShelf({ logs, colors }: { logs: LogEntry[]; colors: any }) {
+function BookShelf({ logs, colors, onSelect }: { logs: LogEntry[]; colors: any; onSelect: (log: LogEntry) => void }) {
   // Split into rows of ~8 spines each
   const SPINES_PER_ROW = 7;
   const rows: LogEntry[][] = [];
@@ -77,7 +78,7 @@ function BookShelf({ logs, colors }: { logs: LogEntry[]; colors: any }) {
             contentContainerStyle={bookStyles.spineRow}
           >
             {row.map((log, i) => (
-              <BookSpine key={log.id} log={log} index={rowIdx * SPINES_PER_ROW + i} />
+              <BookSpine key={log.id} log={log} index={rowIdx * SPINES_PER_ROW + i} onSelect={onSelect} />
             ))}
           </ScrollView>
           {/* Shelf plank */}
@@ -109,7 +110,7 @@ const bookStyles = StyleSheet.create({
 });
 
 // ── Film strip — horizontal scroll of frames with connecting film strip ───────
-function FilmStrip({ logs, colors }: { logs: LogEntry[]; colors: any }) {
+function FilmStrip({ logs, colors, onSelect }: { logs: LogEntry[]; colors: any; onSelect: (log: LogEntry) => void }) {
   return (
     <View style={filmStyles.container}>
       {/* Film strip rail top */}
@@ -121,7 +122,7 @@ function FilmStrip({ logs, colors }: { logs: LogEntry[]; colors: any }) {
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={filmStyles.frames}>
         {logs.map((log) => (
-          <FilmFrame key={log.id} log={log} />
+          <FilmFrame key={log.id} log={log} onSelect={onSelect} />
         ))}
       </ScrollView>
 
@@ -158,13 +159,13 @@ const filmStyles = StyleSheet.create({
 });
 
 // ── Generic grid for TV, Albums, Podcasts, Games ─────────────────────────────
-function ShelfGrid({ logs, type }: { logs: LogEntry[]; type: Tab }) {
+function ShelfGrid({ logs, type, onSelect }: { logs: LogEntry[]; type: Tab; onSelect: (log: LogEntry) => void }) {
   const renderItem = (log: LogEntry) => {
     switch (type) {
-      case 'tv':      return <DVDCase      key={log.id} log={log} />;
-      case 'album':   return <VinylRecord  key={log.id} log={log} />;
-      case 'podcast': return <CassetteTape key={log.id} log={log} />;
-      case 'game':    return <GameCartridge key={log.id} log={log} />;
+      case 'tv':      return <DVDCase      key={log.id} log={log} onSelect={onSelect} />;
+      case 'album':   return <VinylRecord  key={log.id} log={log} onSelect={onSelect} />;
+      case 'podcast': return <CassetteTape key={log.id} log={log} onSelect={onSelect} />;
+      case 'game':    return <GameCartridge key={log.id} log={log} onSelect={onSelect} />;
       default:        return null;
     }
   };
@@ -229,6 +230,7 @@ export default function ShelfScreen() {
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showControls, setShowControls] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
 
   const lastLog = rawLogs[0]?.logged_at ?? null;
   const showNudge = !nudgeDismissed && shouldShowInAppNudge(lastLog);
@@ -260,9 +262,9 @@ export default function ShelfScreen() {
   };
 
   const renderShelf = () => {
-    if (activeTab === 'book') return <BookShelf logs={logs} colors={colors} />;
-    if (activeTab === 'film') return <FilmStrip logs={logs} colors={colors} />;
-    return <ShelfGrid logs={logs} type={activeTab} />;
+    if (activeTab === 'book') return <BookShelf logs={logs} colors={colors} onSelect={setSelectedLog} />;
+    if (activeTab === 'film') return <FilmStrip logs={logs} colors={colors} onSelect={setSelectedLog} />;
+    return <ShelfGrid logs={logs} type={activeTab} onSelect={setSelectedLog} />;
   };
 
   return (
@@ -379,6 +381,7 @@ export default function ShelfScreen() {
           <View style={{ height: 48 }} />
         </ScrollView>
       )}
+      <ShelfItemModal log={selectedLog} onClose={() => setSelectedLog(null)} />
     </SafeAreaView>
   );
 }

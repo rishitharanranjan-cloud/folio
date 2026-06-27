@@ -11,7 +11,7 @@ import { useThemeStore } from '../../store/themeStore';
 import { fonts } from '../../theme/tokens';
 import type { LogEntry } from '../../hooks/useLogs';
 
-interface Props { log: LogEntry; index: number }
+interface Props { log: LogEntry; index: number; onSelect?: (log: LogEntry) => void }
 
 // Deterministic spine width and height from title hash
 function hashInt(str: string, seed = 0): number {
@@ -30,7 +30,7 @@ function spineColour(log: LogEntry, index: number): string {
   return SPINE_COLOURS[hashInt(log.id) % SPINE_COLOURS.length];
 }
 
-export default function BookSpine({ log, index }: Props) {
+export default function BookSpine({ log, index, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
   const liftY   = useSharedValue(0);
@@ -56,7 +56,7 @@ export default function BookSpine({ log, index }: Props) {
   const isWide = spineW >= 36;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.wrapper}>
+    <TouchableOpacity onPress={onPress} onLongPress={() => onSelect?.(log)} activeOpacity={0.9} style={styles.wrapper}>
       <Animated.View style={spineStyle}>
         {/* Spine body */}
         <View style={[styles.spine, { height: spineH, width: spineW, backgroundColor: colour }]}>

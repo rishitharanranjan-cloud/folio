@@ -13,9 +13,9 @@ import { fonts } from '../../theme/tokens';
 import { getAmbientColour, ambientToHex } from '../../lib/ambientColour';
 import type { LogEntry } from '../../hooks/useLogs';
 
-interface Props { log: LogEntry }
+interface Props { log: LogEntry; onSelect?: (log: LogEntry) => void }
 
-export default function DVDCase({ log }: Props) {
+export default function DVDCase({ log, onSelect }: Props) {
   const { colors } = useThemeStore();
   const [pressed, setPressed] = useState(false);
   const rotateY = useSharedValue(0);
@@ -36,7 +36,7 @@ export default function DVDCase({ log }: Props) {
   const colour = log.dominant_colour ?? ambientToHex(getAmbientColour(log.title));
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.wrapper}>
+    <TouchableOpacity onPress={onPress} onLongPress={() => onSelect?.(log)} activeOpacity={0.9} style={styles.wrapper}>
       {/* Spine (rest state) */}
       <Animated.View style={[styles.spine, { backgroundColor: colour }, spineStyle]}>
         <Text style={[styles.spineText, { color: 'rgba(255,255,255,0.85)', fontFamily: fonts.mono }]} numberOfLines={5}>
