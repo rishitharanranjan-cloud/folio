@@ -22,10 +22,13 @@ export function computeStreaks(logDates: string[]): StreakResult {
 
   const weeks = new Set(logDates.map((d) => isoWeekKey(new Date(d))));
 
-  // Walk backwards from current week
+  // Walk backwards from current week.
+  // Grace: if the current week has no log yet, start from last week so an
+  // in-progress week doesn't break a live streak.
   const now = new Date();
   let currentStreak = 0;
   const d = new Date(now);
+  if (!weeks.has(isoWeekKey(d))) d.setDate(d.getDate() - 7);
   while (true) {
     const key = isoWeekKey(d);
     if (!weeks.has(key)) break;
