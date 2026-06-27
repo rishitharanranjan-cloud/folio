@@ -26,7 +26,7 @@ const SORT_COL: Record<string, { col: string; asc: boolean }> = {
   year:   { col: 'year',      asc: false },
 };
 
-export function useLogs(mediaType?: string, sortKey = 'date', statusFilter = 'all') {
+export function useLogs(mediaType?: string, sortKey = 'date', statusFilter = 'all', noPaginate = false) {
   const { user } = useAuthStore();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,8 +45,9 @@ export function useLogs(mediaType?: string, sortKey = 'date', statusFilter = 'al
         .from('logs')
         .select('id,media_type,title,creator,year,status,rating,review,cover_url,dominant_colour,logged_at,external_id')
         .eq('user_id', user.id)
-        .order(col, { ascending: asc, nullsFirst: false })
-        .range(pageOffset, pageOffset + PAGE_SIZE - 1);
+        .order(col, { ascending: asc, nullsFirst: false });
+
+      if (!noPaginate) query = (query as any).range(pageOffset, pageOffset + PAGE_SIZE - 1);
 
       if (mediaType) query = query.eq('media_type', mediaType);
       if (statusFilter !== 'all') query = query.eq('status', statusFilter);
@@ -63,7 +64,7 @@ export function useLogs(mediaType?: string, sortKey = 'date', statusFilter = 'al
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user, mediaType, sortKey, statusFilter]);
+  }, [user, mediaType, sortKey, statusFilter, noPaginate]);
 
   const refetch = useCallback(() => {
     offsetRef.current = 0;

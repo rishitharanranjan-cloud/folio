@@ -46,7 +46,7 @@ export default function ProfileScreen() {
   const { colors, mode, setMode } = useThemeStore();
   const { user, signOut } = useAuthStore();
 
-  const { logs: allLogs, loading: logsLoading } = useLogs();
+  const { logs: allLogs, loading: logsLoading } = useLogs(undefined, 'date', 'all', true);
   const { seeds } = useTasteSeeds();
 
   const [profile, setProfile] = useState<UserProfile>({ name: '', handle: '', bio: '' });

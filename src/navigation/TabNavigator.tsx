@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import ShelfScreen from '../screens/ShelfScreen';
 import TrailsScreen from '../screens/TrailsScreen';
+import SocialScreen from '../screens/SocialScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LogModal from '../screens/log/LogModal';
 import ConfirmationScreen from '../screens/log/ConfirmationScreen';
@@ -127,8 +128,9 @@ export default function TabNavigator() {
         <Tab.Screen name="Shelf" options={{ tabBarLabel: 'Shelf' }}>
           {() => <ShelfScreen onOpenLog={() => setLogOpen(true)} />}
         </Tab.Screen>
-        <Tab.Screen name="Log"     component={LogSpacer}     options={{ tabBarLabel: 'Log'    }} />
         <Tab.Screen name="Trails"  component={TrailsScreen}  options={{ tabBarLabel: 'Trails' }} />
+        <Tab.Screen name="Log"     component={LogSpacer}     options={{ tabBarLabel: 'Log'    }} />
+        <Tab.Screen name="Social"  component={SocialScreen}  options={{ tabBarLabel: 'Social' }} />
         <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile'}} />
       </Tab.Navigator>
 
