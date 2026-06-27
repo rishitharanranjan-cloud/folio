@@ -134,7 +134,7 @@ export default function TabNavigator() {
       <Modal visible={logOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setLogOpen(false)}>
         <LogModal
           onClose={() => setLogOpen(false)}
-          onLogged={(item, rating) => handleLogged(item, rating)}
+          onLogged={(item, rating, review, trail) => handleLogged(item, rating, review, trail)}
         />
       </Modal>
 
