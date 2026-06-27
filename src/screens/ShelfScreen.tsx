@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, Dimensions,
@@ -22,7 +22,7 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 type Tab = 'book' | 'film' | 'tv' | 'album' | 'podcast' | 'game';
 type SortKey = 'date' | 'rating' | 'title' | 'year';
-type StatusFilter = 'all' | 'completed' | 'in_progress' | 'dropped' | 'abandoned';
+type StatusFilter = 'all' | 'finished' | 'in_progress' | 'dropped' | 'abandoned';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'date',   label: 'DATE' },
@@ -33,7 +33,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'all',         label: 'ALL' },
-  { key: 'completed',   label: 'DONE' },
+  { key: 'finished',    label: 'DONE' },
   { key: 'in_progress', label: 'IN PROGRESS' },
   { key: 'dropped',     label: 'DROPPED' },
   { key: 'abandoned',   label: 'ABANDONED' },
@@ -227,35 +227,15 @@ interface Props { onOpenLog?: () => void }
 export default function ShelfScreen({ onOpenLog }: Props) {
   const { colors } = useThemeStore();
   const [activeTab, setActiveTab] = useState<Tab>('book');
-  const { logs: rawLogs, loading, refetch } = useLogs(activeTab);
-  const [refreshing, setRefreshing] = useState(false);
-  const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const { logs, loading, loadingMore, hasMore, refetch, loadMore } = useLogs(activeTab, sortKey, statusFilter);
+  const [refreshing, setRefreshing] = useState(false);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
 
-  const lastLog = rawLogs[0]?.logged_at ?? null;
+  const lastLog = logs[0]?.logged_at ?? null;
   const showNudge = !nudgeDismissed && shouldShowInAppNudge(lastLog);
-
-  const logs = useMemo(() => {
-    let filtered = statusFilter === 'all'
-      ? rawLogs
-      : rawLogs.filter((l) => l.status === statusFilter);
-
-    return [...filtered].sort((a, b) => {
-      switch (sortKey) {
-        case 'rating':
-          return (b.rating ?? -1) - (a.rating ?? -1);
-        case 'title':
-          return a.title.localeCompare(b.title);
-        case 'year':
-          return (b.year ?? 0) - (a.year ?? 0);
-        case 'date':
-        default:
-          return new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime();
-      }
-    });
-  }, [rawLogs, sortKey, statusFilter]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -278,7 +258,7 @@ export default function ShelfScreen({ onOpenLog }: Props) {
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>MY SHELF</Text>
         <Text style={[styles.count, { color: colors.ink3, fontFamily: fonts.mono }]}>
-          {loading ? '…' : `${logs.length}${statusFilter !== 'all' ? `/${rawLogs.length}` : ''} ${TABS.find(t => t.key === activeTab)?.label.toLowerCase() ?? ''}`}
+          {loading ? '…' : `${logs.length}${hasMore ? '+' : ''} ${TABS.find(t => t.key === activeTab)?.label.toLowerCase() ?? ''}`}
         </Text>
       </View>
 
@@ -380,6 +360,16 @@ export default function ShelfScreen({ onOpenLog }: Props) {
           }
         >
           {renderShelf()}
+          {loadingMore && (
+            <ActivityIndicator color={colors.accent} style={{ padding: 20 }} />
+          )}
+          {hasMore && !loadingMore && (
+            <TouchableOpacity onPress={loadMore} style={styles.loadMore}>
+              <Text style={[styles.loadMoreText, { color: colors.ink3, fontFamily: fonts.mono }]}>
+                LOAD MORE
+              </Text>
+            </TouchableOpacity>
+          )}
           <View style={{ height: 48 }} />
         </ScrollView>
       )}
@@ -423,6 +413,8 @@ const styles = StyleSheet.create({
   },
   scroll: { flex: 1 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadMore: { padding: 20, alignItems: 'center' },
+  loadMoreText: { fontSize: 10, letterSpacing: 2 },
 });
 
 const controlStyles = StyleSheet.create({

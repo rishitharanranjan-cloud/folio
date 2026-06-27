@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
@@ -17,38 +17,66 @@ export interface LogEntry {
   external_id: string | null;
 }
 
-export function useLogs(mediaType?: string) {
+const PAGE_SIZE = 50;
+
+const SORT_COL: Record<string, { col: string; asc: boolean }> = {
+  date:   { col: 'logged_at', asc: false },
+  rating: { col: 'rating',    asc: false },
+  title:  { col: 'title',     asc: true  },
+  year:   { col: 'year',      asc: false },
+};
+
+export function useLogs(mediaType?: string, sortKey = 'date', statusFilter = 'all') {
   const { user } = useAuthStore();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const offsetRef = useRef(0);
 
-  const fetch = useCallback(async () => {
+  const fetchPage = useCallback(async (pageOffset: number, append: boolean) => {
     if (!user) { setLoading(false); return; }
-    setLoading(true);
+    if (pageOffset === 0) setLoading(true); else setLoadingMore(true);
     setError(null);
     try {
+      const { col, asc } = SORT_COL[sortKey] ?? SORT_COL.date;
       let query = supabase
         .from('logs')
         .select('id,media_type,title,creator,year,status,rating,review,cover_url,dominant_colour,logged_at,external_id')
         .eq('user_id', user.id)
-        .order('logged_at', { ascending: false });
+        .order(col, { ascending: asc, nullsFirst: false })
+        .range(pageOffset, pageOffset + PAGE_SIZE - 1);
 
       if (mediaType) query = query.eq('media_type', mediaType);
+      if (statusFilter !== 'all') query = query.eq('status', statusFilter);
 
       const { data, error: err } = await query;
       if (err) throw err;
-      setLogs(data ?? []);
+      const rows = data ?? [];
+      setLogs(prev => append ? [...prev, ...rows] : rows);
+      setHasMore(rows.length === PAGE_SIZE);
+      offsetRef.current = pageOffset + rows.length;
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [user, mediaType]);
+  }, [user, mediaType, sortKey, statusFilter]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  const refetch = useCallback(() => {
+    offsetRef.current = 0;
+    fetchPage(0, false);
+  }, [fetchPage]);
 
-  return { logs, loading, error, refetch: fetch };
+  const loadMore = useCallback(() => {
+    if (!loadingMore && !loading && hasMore) fetchPage(offsetRef.current, true);
+  }, [fetchPage, loadingMore, loading, hasMore]);
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  return { logs, loading, loadingMore, hasMore, error, refetch, loadMore };
 }
 
 export interface LogUpdate {
