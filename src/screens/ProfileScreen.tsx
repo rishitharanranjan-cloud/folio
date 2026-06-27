@@ -25,6 +25,7 @@ import { useTasteSeeds } from '../hooks/useTasteSeeds';
 import Constellation from '../components/Constellation';
 import GoalRing from '../components/GoalRing';
 import { fonts, THEME_NAMES, dark as darkTheme, light as lightTheme, type ThemeMode } from '../theme/tokens';
+import { W } from './wrapped/palette';
 import { computeStreaks } from '../lib/streaks';
 import FolioCodeMark from '../components/FolioCodeMark';
 
@@ -376,19 +377,19 @@ export default function ProfileScreen() {
         {/* Year in Culture */}
         <View style={[styles.wrappedSection, { borderBottomColor: colors.border }]}>
           <TouchableOpacity
-            style={[styles.wrappedBtn, { backgroundColor: '#c84820' }]}
+            style={[styles.wrappedBtn, { backgroundColor: W.terracotta }]}
             onPress={() => setWrappedOpen(true)}
             activeOpacity={0.85}
           >
             <View>
-              <Text style={[styles.wrappedBtnLabel, { fontFamily: fonts.mono, color: 'rgba(245,237,216,0.6)' }]}>
+              <Text style={[styles.wrappedBtnLabel, { fontFamily: fonts.mono, color: `${W.cream}99` }]}>
                 {new Date().getFullYear()} · YEAR IN CULTURE
               </Text>
-              <Text style={[styles.wrappedBtnTitle, { fontFamily: fonts.display, color: '#f5edd8' }]}>
+              <Text style={[styles.wrappedBtnTitle, { fontFamily: fonts.display, color: W.cream }]}>
                 WRAPPED
               </Text>
             </View>
-            <Text style={{ color: 'rgba(245,237,216,0.6)', fontSize: 24 }}>→</Text>
+            <Text style={{ color: `${W.cream}99`, fontSize: 24 }}>→</Text>
           </TouchableOpacity>
         </View>
 

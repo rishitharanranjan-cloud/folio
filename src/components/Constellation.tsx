@@ -1,7 +1,7 @@
 /**
  * Constellation component — SVG star map.
  * Dark mode: deep space, cold blue-white stars, lines rgba(138,184,232,0.42)
- * Light mode: cognac background, cream stars, atlas grid lines at low opacity
+ * Light mode: Dust Linen bg, Saffron Gold stars, Tamarind tint grid lines
  */
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
@@ -33,12 +33,12 @@ export default function Constellation({
   const isDark = mode === 'dark';
 
   // Mode-specific colours
-  const bgColour    = isDark ? '#030508' : '#a87030';
-  const lineColour  = isDark ? 'rgba(138,184,232,0.42)' : 'rgba(245,237,216,0.3)';
-  const starColour  = isDark ? '#8ab8e8' : '#f5edd8';
-  const dimColour   = isDark ? 'rgba(138,184,232,0.25)' : 'rgba(245,237,216,0.25)';
-  const labelColour = isDark ? 'rgba(224,234,248,0.5)' : 'rgba(245,237,216,0.6)';
-  const gridColour  = isDark ? 'rgba(96,152,200,0.06)' : 'rgba(245,237,216,0.08)';
+  const bgColour    = isDark ? '#030508'                : colors.bg3;
+  const lineColour  = isDark ? 'rgba(138,184,232,0.42)' : colors.accentg;
+  const starColour  = isDark ? '#8ab8e8'                : colors.editorial;
+  const dimColour   = isDark ? 'rgba(138,184,232,0.25)' : colors.accentg;
+  const labelColour = isDark ? 'rgba(224,234,248,0.5)'  : colors.ink3;
+  const gridColour  = isDark ? 'rgba(96,152,200,0.06)'  : 'rgba(0,0,0,0.04)';
 
   const { stars, lines } = useMemo(
     () => buildConstellation(logs, tasteSeeds, starColour, dimColour),
