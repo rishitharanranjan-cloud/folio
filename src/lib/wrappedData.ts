@@ -91,6 +91,7 @@ export function computeWrapped(logs: LogEntry[], year: number): WrappedData {
     current = diff === 1 ? current + 1 : 1;
     longest = Math.max(longest, current);
   }
+  longest = Math.max(longest, current);
 
   return {
     year,
