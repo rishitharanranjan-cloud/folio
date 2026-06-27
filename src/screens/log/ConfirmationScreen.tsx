@@ -69,7 +69,17 @@ export default function ConfirmationScreen({ item, rating, review, onDone }: Pro
   const statsStyle  = useAnimatedStyle(() => ({ opacity: statsOpacity.value }));
   const btnStyle    = useAnimatedStyle(() => ({ opacity: btnOpacity.value }));
 
-  const mediaLabel = item.mediaType.charAt(0).toUpperCase() + item.mediaType.slice(1);
+  const mediaLabel = item.mediaType.toUpperCase();
+
+  const statText = (() => {
+    if (totalLogged === null) return null;
+    if (totalLogged === 1)   return 'YOUR FIRST LOG. THE SHELF BEGINS.';
+    if (totalLogged === 10)  return 'TEN DOWN. YOU\'RE BUILDING SOMETHING.';
+    if (totalLogged === 25)  return 'TWENTY-FIVE. A REAL SHELF NOW.';
+    if (totalLogged === 50)  return 'FIFTY LOGGED. THAT\'S A TASTE.';
+    if (totalLogged === 100) return 'ONE HUNDRED. A CATALOGUE.';
+    return `${totalLogged} THINGS LOGGED ON FOLIO`;
+  })();
 
   return (
     <ScrollView
@@ -127,11 +137,9 @@ export default function ConfirmationScreen({ item, rating, review, onDone }: Pro
 
       {/* Quick stat */}
       <Animated.View style={[styles.stat, statsStyle]}>
-        {totalLogged !== null && (
+        {statText && (
           <Text style={[styles.statText, { color: 'rgba(255,255,255,0.45)', fontFamily: fonts.mono }]}>
-            {totalLogged === 1
-              ? 'YOUR FIRST LOG. THE SHELF BEGINS.'
-              : `${totalLogged} THINGS LOGGED ON FOLIO`}
+            {statText}
           </Text>
         )}
       </Animated.View>
