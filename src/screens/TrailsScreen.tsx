@@ -116,10 +116,12 @@ export default function TrailsScreen() {
           ) : filteredTrails.length === 0 ? (
             <View style={styles.empty}>
               <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: fonts.display }]}>
-                NO TRAILS YET
+                {trails.length === 0 ? 'NO TRAILS YET' : 'NONE IN THIS CATEGORY'}
               </Text>
               <Text style={[styles.emptyText, { color: colors.ink3, fontFamily: fonts.body }]}>
-                Editorial trails are being curated. Check back soon.
+                {trails.length === 0
+                  ? 'Editorial trails are being curated. Check back soon.'
+                  : 'Try a different category filter above.'}
               </Text>
             </View>
           ) : (

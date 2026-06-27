@@ -290,7 +290,7 @@ export default function SocialScreen() {
                   FIND PEOPLE
                 </Text>
                 <Text style={[styles.findPeopleSub, { color: colors.ink3, fontFamily: fonts.body }]}>
-                  Go to Discover → People to follow readers, watchers, and listeners.
+                  Go to Trails → People to follow readers, watchers, and listeners.
                 </Text>
               </View>
             </View>
