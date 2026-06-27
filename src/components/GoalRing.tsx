@@ -42,8 +42,18 @@ export default function GoalRing({
     : `${logged}`;
   const sublabel = goal ? 'THIS YEAR' : 'LOGGED';
 
+  const a11yLabel = goal
+    ? `${logged} of ${goal} logged this year${progress >= 1 ? ', goal reached' : ''}`
+    : `${logged} logged`;
+
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+      accessibilityLabel={a11yLabel}
+      accessibilityRole="button"
+      accessibilityHint={onPress ? 'Tap to set or change your annual goal' : undefined}
+    >
       <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
         <Svg width={size} height={size} style={{ position: 'absolute' }}>
           {/* Background track */}
