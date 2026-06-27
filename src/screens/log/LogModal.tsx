@@ -346,7 +346,7 @@ export default function LogModal({ onClose, onLogged }: Props) {
             <Text style={[styles.sectionLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>RATING</Text>
             <View style={styles.stars}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7}>
+                <TouchableOpacity key={star} onPress={() => setRating(rating === star ? 0 : star)} activeOpacity={0.7}>
                   <Text style={[styles.star, { color: star <= rating ? accentColour : colors.bg4 }]}>
                     ★
                   </Text>
@@ -391,7 +391,7 @@ export default function LogModal({ onClose, onLogged }: Props) {
           {/* Date consumed */}
           <View style={styles.section}>
             <Text style={[styles.sectionLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>
-              WHEN DID YOU {status === 'want' ? 'PLAN TO' : status === 'current' ? 'START' : 'FINISH'} IT?
+              WHEN DID YOU {status === 'want' ? 'PLAN TO' : status === 'current' ? 'START' : status === 'abandoned' ? 'ABANDON' : 'FINISH'} IT?
             </Text>
             <TouchableOpacity
               style={[styles.dateBtn, { backgroundColor: colors.bg3, borderColor: colors.border2 }]}
@@ -401,7 +401,7 @@ export default function LogModal({ onClose, onLogged }: Props) {
               <Text style={[styles.dateBtnText, { color: colors.ink, fontFamily: fonts.mono }]}>
                 {consumedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
               </Text>
-              <Text style={[styles.dateBtnIcon, { color: colors.ink3 }]}>📅</Text>
+              <Text style={[styles.dateBtnIcon, { color: colors.ink3, fontFamily: fonts.mono }]}>→</Text>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -584,13 +584,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   statusText: { fontSize: 10, letterSpacing: 1.5 },
-  reviewInput: {
-    borderWidth: 1,
-    padding: 12,
-    fontSize: 15,
-    minHeight: 96,
-    fontStyle: 'italic',
-  },
   reflectInput: {
     borderWidth: 1,
     borderLeftWidth: 3,
@@ -598,13 +591,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     minHeight: 64,
     fontStyle: 'italic',
-  },
-  input: {
-    height: 44,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    fontSize: 13,
-    letterSpacing: 1,
   },
   dateBtn: {
     height: 48,
