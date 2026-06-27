@@ -55,7 +55,7 @@ export default function MilestoneModal({ milestone, onDismiss }: Props) {
     <Animated.View
       style={[
         styles.container,
-        { backgroundColor: colors.surface, borderColor: colors.accent, opacity, transform: [{ translateY }] },
+        { backgroundColor: colors.bg2, borderColor: colors.accent, opacity, transform: [{ translateY }] },
       ]}
       pointerEvents="box-none"
     >

@@ -44,8 +44,8 @@ async function searchTMDB(query: string, type: 'film' | 'tv'): Promise<SearchRes
         : item.first_air_date
         ? parseInt(item.first_air_date.slice(0, 4))
         : null,
-      coverUrl:     poster ? TMDB_IMG('w342')(poster) : null,
-      coverUrlHD:   poster ? TMDB_IMG('w780')(poster) : null,
+      coverUrl:     poster ? TMDB_IMG('w342') + poster : null,
+      coverUrlHD:   poster ? TMDB_IMG('w780') + poster : null,
       mediaType:    type,
       externalId:   String(item.id),
     };

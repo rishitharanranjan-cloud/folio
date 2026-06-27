@@ -85,8 +85,8 @@ export default function CommentSheet({ logId, logTitle, onClose, onCountChange }
         user_id:     data.user_id,
         body:        data.body,
         created_at:  data.created_at,
-        user_name:   data.users?.name ?? null,
-        user_handle: data.users?.handle ?? null,
+        user_name:   (data.users as any)?.[0]?.name ?? null,
+        user_handle: (data.users as any)?.[0]?.handle ?? null,
       };
       const updated = [...comments, newComment];
       setComments(updated);

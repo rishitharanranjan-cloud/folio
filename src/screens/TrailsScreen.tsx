@@ -225,7 +225,7 @@ export default function TrailsScreen() {
                     borderColor: person.isFollowing ? colors.streak : colors.accent,
                     backgroundColor: person.isFollowing ? `${colors.streak}18` : 'transparent',
                   }]}
-                  onPress={() => toggleFollow(person.id, person.isFollowing)}
+                  onPress={() => toggleFollow(person.id)}
                   activeOpacity={0.7}
                 >
                   <Text style={[styles.followBtnText, {
@@ -245,7 +245,7 @@ export default function TrailsScreen() {
       {/* Trail detail sheet */}
       {selectedTrail && (
         <TrailDetailSheet
-          trail={selectedTrail}
+          trailId={selectedTrailId!}
           onClose={() => setSelectedTrailId(null)}
         />
       )}
