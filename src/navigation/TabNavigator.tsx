@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Text, Modal } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import HomeScreen from '../screens/HomeScreen';
 import ShelfScreen from '../screens/ShelfScreen';
 import TrailsScreen from '../screens/TrailsScreen';
-import SocialScreen from '../screens/SocialScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LogModal from '../screens/log/LogModal';
 import ConfirmationScreen from '../screens/log/ConfirmationScreen';
@@ -125,12 +125,12 @@ export default function TabNavigator() {
         )}
         screenOptions={{ headerShown: false }}
       >
+        <Tab.Screen name="Home"    component={HomeScreen}    options={{ tabBarLabel: 'Home'   }} />
         <Tab.Screen name="Shelf" options={{ tabBarLabel: 'Shelf' }}>
           {() => <ShelfScreen onOpenLog={() => setLogOpen(true)} />}
         </Tab.Screen>
-        <Tab.Screen name="Trails"  component={TrailsScreen}  options={{ tabBarLabel: 'Trails' }} />
         <Tab.Screen name="Log"     component={LogSpacer}     options={{ tabBarLabel: 'Log'    }} />
-        <Tab.Screen name="Social"  component={SocialScreen}  options={{ tabBarLabel: 'Social' }} />
+        <Tab.Screen name="Trails"  component={TrailsScreen}  options={{ tabBarLabel: 'Trails' }} />
         <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile'}} />
       </Tab.Navigator>
 
