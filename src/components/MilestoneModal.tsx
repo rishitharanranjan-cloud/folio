@@ -22,7 +22,7 @@ function getMilestoneText(m: MilestoneType) {
   }
   return {
     number: `${m.weeks}`,
-    label: m.weeks === 1 ? 'WEEK STREAK' : 'WEEK STREAK',
+    label: m.weeks === 1 ? 'WEEK STREAK' : 'WEEKS STREAK',
     sub: m.weeks >= 12 ? 'Three months straight.' : m.weeks >= 8 ? 'Two months running.' : 'Consistent culture diet.',
   };
 }
@@ -34,6 +34,8 @@ export default function MilestoneModal({ milestone, onDismiss }: Props) {
 
   useEffect(() => {
     if (!milestone) return;
+    opacity.setValue(0);
+    translateY.setValue(30);
     Animated.parallel([
       Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
       Animated.spring(translateY, { toValue: 0, tension: 80, friction: 8, useNativeDriver: true }),

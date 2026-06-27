@@ -124,7 +124,9 @@ export default function TabNavigator() {
         )}
         screenOptions={{ headerShown: false }}
       >
-        <Tab.Screen name="Shelf"   component={ShelfScreen}   options={{ tabBarLabel: 'Shelf'  }} />
+        <Tab.Screen name="Shelf" options={{ tabBarLabel: 'Shelf' }}>
+          {() => <ShelfScreen onOpenLog={() => setLogOpen(true)} />}
+        </Tab.Screen>
         <Tab.Screen name="Log"     component={LogSpacer}     options={{ tabBarLabel: 'Log'    }} />
         <Tab.Screen name="Trails"  component={TrailsScreen}  options={{ tabBarLabel: 'Trails' }} />
         <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile'}} />

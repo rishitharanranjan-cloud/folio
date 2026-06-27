@@ -222,7 +222,9 @@ const emptyStyles = StyleSheet.create({
 });
 
 // ── Main screen ───────────────────────────────────────────────────────────────
-export default function ShelfScreen() {
+interface Props { onOpenLog?: () => void }
+
+export default function ShelfScreen({ onOpenLog }: Props) {
   const { colors } = useThemeStore();
   const [activeTab, setActiveTab] = useState<Tab>('book');
   const { logs: rawLogs, loading, refetch } = useLogs(activeTab);
@@ -357,7 +359,7 @@ export default function ShelfScreen() {
       {/* Weekly nudge banner */}
       {showNudge && !loading && (
         <WeeklyNudgeBanner
-          onLog={() => setNudgeDismissed(true)}
+          onLog={() => { setNudgeDismissed(true); onOpenLog?.(); }}
           onDismiss={() => setNudgeDismissed(true)}
         />
       )}
