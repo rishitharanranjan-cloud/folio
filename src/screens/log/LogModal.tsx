@@ -132,7 +132,7 @@ export default function LogModal({ onClose, onLogged }: Props) {
         creator: selected.creator,
         year: selected.year,
         status,
-        rating,
+        rating: rating > 0 ? rating : null,
         review: review.trim() || null,
         logged_at: consumedDate.toISOString(),
         cover_url: selected.coverUrl,
