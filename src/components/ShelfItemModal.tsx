@@ -31,6 +31,10 @@ export default function ShelfItemModal({ log, onClose }: Props) {
   const isDark = mode === 'dark';
   const slideY = useRef(new Animated.Value(SHEET_H)).current;
   const bgO    = useRef(new Animated.Value(0)).current;
+  // Keep last non-null log so content stays visible during the exit animation.
+  const lastLog = useRef<LogEntry | null>(null);
+  if (log) lastLog.current = log;
+  const displayLog = lastLog.current;
 
   useEffect(() => {
     if (log) {
@@ -46,13 +50,13 @@ export default function ShelfItemModal({ log, onClose }: Props) {
     }
   }, [log]);
 
-  if (!log) return null;
+  if (!displayLog) return null;
 
-  const rawRgb  = log.dominant_colour ? hexToRgb(log.dominant_colour) : null;
+  const rawRgb  = displayLog.dominant_colour ? hexToRgb(displayLog.dominant_colour) : null;
   const clamped = rawRgb ? clampAmbient(rawRgb, isDark) : null;
   const accentHex = clamped
     ? ambientToHex(clamped)
-    : ambientToHex(clampAmbient(getAmbientColour(log.title), isDark));
+    : ambientToHex(clampAmbient(getAmbientColour(displayLog.title), isDark));
 
   const accentRgb = hexToRgb(accentHex);
   const accentFill = accentRgb
@@ -84,12 +88,12 @@ export default function ShelfItemModal({ log, onClose }: Props) {
         >
           {/* Cover + meta side-by-side */}
           <View style={styles.topRow}>
-            {log.cover_url ? (
-              <Image source={{ uri: log.cover_url }} style={[styles.cover, { borderColor: colors.border }]} resizeMode="cover" />
+            {displayLog.cover_url ? (
+              <Image source={{ uri: displayLog.cover_url }} style={[styles.cover, { borderColor: colors.border }]} resizeMode="cover" />
             ) : (
               <View style={[styles.cover, { backgroundColor: accentFill, borderColor: accentHex }]}>
                 <Text style={[styles.coverFallback, { color: accentHex, fontFamily: fonts.mono }]}>
-                  {log.title.slice(0, 2).toUpperCase()}
+                  {displayLog.title.slice(0, 2).toUpperCase()}
                 </Text>
               </View>
             )}
@@ -97,25 +101,25 @@ export default function ShelfItemModal({ log, onClose }: Props) {
             <View style={styles.metaCol}>
               <View style={[styles.typePill, { backgroundColor: accentFill, borderColor: accentHex }]}>
                 <Text style={[styles.typeText, { color: accentHex, fontFamily: fonts.mono }]}>
-                  {MEDIA_LABEL[log.media_type] ?? log.media_type.toUpperCase()}
+                  {MEDIA_LABEL[displayLog.media_type] ?? displayLog.media_type.toUpperCase()}
                 </Text>
               </View>
 
               <Text style={[styles.title, { color: colors.ink, fontFamily: fonts.display }]} numberOfLines={5}>
-                {log.title.toUpperCase()}
+                {displayLog.title.toUpperCase()}
               </Text>
 
-              {log.creator && (
+              {displayLog.creator && (
                 <Text style={[styles.creator, { color: colors.ink2, fontFamily: fonts.body }]}>
-                  {log.creator}{log.year ? `  ·  ${log.year}` : ''}
+                  {displayLog.creator}{displayLog.year ? `  ·  ${displayLog.year}` : ''}
                 </Text>
               )}
 
               {/* Rating */}
-              {log.rating ? (
+              {displayLog.rating ? (
                 <View style={styles.ratingRow}>
                   {[1,2,3,4,5].map(s => (
-                    <Text key={s} style={[styles.star, { color: s <= log.rating! ? accentHex : colors.border2 }]}>★</Text>
+                    <Text key={s} style={[styles.star, { color: s <= displayLog.rating! ? accentHex : colors.border2 }]}>★</Text>
                   ))}
                 </View>
               ) : (
@@ -123,10 +127,10 @@ export default function ShelfItemModal({ log, onClose }: Props) {
               )}
 
               {/* Status */}
-              {log.status && log.status !== 'completed' && (
+              {displayLog.status && displayLog.status !== 'completed' && (
                 <View style={[styles.statusPill, { backgroundColor: colors.bg3, borderColor: colors.border }]}>
                   <Text style={[styles.statusText, { color: colors.ink3, fontFamily: fonts.mono }]}>
-                    {STATUS_LABEL[log.status] ?? log.status.toUpperCase()}
+                    {STATUS_LABEL[displayLog.status] ?? displayLog.status.toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -137,11 +141,11 @@ export default function ShelfItemModal({ log, onClose }: Props) {
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
           {/* Review */}
-          {log.review ? (
+          {displayLog.review ? (
             <View style={[styles.reviewBox, { borderColor: colors.border, backgroundColor: colors.bg3 }]}>
               <Text style={[styles.quoteGlyph, { color: accentHex, fontFamily: fonts.display }]}>"</Text>
               <Text style={[styles.reviewText, { color: colors.ink2, fontFamily: fonts.body }]}>
-                {log.review}
+                {displayLog.review}
               </Text>
             </View>
           ) : (
@@ -152,7 +156,7 @@ export default function ShelfItemModal({ log, onClose }: Props) {
 
           {/* Logged date */}
           <Text style={[styles.date, { color: colors.ink3, fontFamily: fonts.mono }]}>
-            LOGGED {new Date(log.logged_at).toLocaleDateString('en-GB', {
+            LOGGED {new Date(displayLog.logged_at).toLocaleDateString('en-GB', {
               day: 'numeric', month: 'long', year: 'numeric',
             }).toUpperCase()}
           </Text>
