@@ -582,40 +582,63 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
         styles.sheet,
         { backgroundColor: colors.bg2, transform: [{ translateY: slideY }] },
       ]}>
-        {/* Accent bar */}
-        <View style={[styles.accentBar, { backgroundColor: accentHex }]} />
-
-        {/* Handle */}
-        <View style={styles.topBar}>
-          <View style={[styles.handle, { backgroundColor: colors.border2 }]} />
-        </View>
-
-        {/* Cover + title row — always visible */}
-        <View style={[styles.heroRow, { borderBottomColor: colors.border }]}>
+        {/* Full-bleed cover hero */}
+        <View style={styles.heroCover}>
           {displayLog.cover_url ? (
-            <Image source={{ uri: displayLog.cover_url }} style={[styles.cover, { borderColor: colors.border }]} resizeMode="cover" />
+            <Image source={{ uri: displayLog.cover_url }} style={styles.coverImg} resizeMode="cover" />
           ) : (
-            <View style={[styles.cover, { backgroundColor: accentFill, borderColor: accentHex }]}>
-              <Text style={[styles.coverFallback, { color: accentHex, fontFamily: fonts.mono }]}>
-                {displayLog.title.slice(0, 2).toUpperCase()}
-              </Text>
-            </View>
+            <View style={[styles.coverImg, { backgroundColor: accentFill }]} />
           )}
 
-          <View style={styles.heroMeta}>
-            <View style={[styles.typePill, { backgroundColor: accentFill, borderColor: accentHex }]}>
-              <Text style={[styles.typeText, { color: accentHex, fontFamily: fonts.mono }]}>
-                {MEDIA_LABEL[displayLog.media_type] ?? displayLog.media_type.toUpperCase()}
-              </Text>
-            </View>
-            <Text style={[styles.title, { color: colors.ink, fontFamily: fonts.display }]} numberOfLines={3}>
+          {/* Top scrim for handle */}
+          <View style={styles.coverScrimTop} />
+          {/* Bottom scrim for title legibility */}
+          <View style={[styles.coverScrimBottom, { backgroundColor: `${colors.bg}e0` }]} />
+
+          {/* Drag handle + close */}
+          <View style={styles.coverHandleRow}>
+            <View style={[styles.handle, { backgroundColor: 'rgba(255,255,255,0.4)' }]} />
+          </View>
+          <TouchableOpacity style={styles.coverCloseBtn} onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={[styles.coverCloseTxt, { fontFamily: fonts.mono }]}>✕</Text>
+          </TouchableOpacity>
+
+          {/* Media type pill */}
+          <View style={[styles.typePill, { backgroundColor: accentFill, borderColor: accentHex }]}>
+            <Text style={[styles.typeText, { color: accentHex, fontFamily: fonts.mono }]}>
+              {MEDIA_LABEL[displayLog.media_type] ?? displayLog.media_type.toUpperCase()}
+            </Text>
+          </View>
+
+          {/* Title + creator over cover bottom */}
+          <View style={styles.coverTitleArea}>
+            <Text style={[styles.coverTitle, { color: '#fff', fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]} numberOfLines={3}>
               {displayLog.title.toUpperCase()}
             </Text>
-            {displayLog.creator && (
-              <Text style={[styles.creator, { color: colors.ink2, fontFamily: fonts.body }]}>
-                {displayLog.creator}
+            {(displayLog.creator || displayLog.year) && (
+              <Text style={[styles.coverCreator, { color: 'rgba(255,255,255,0.7)', fontFamily: fonts.body }]}>
+                {[displayLog.year, displayLog.creator].filter(Boolean).join('  ·  ')}
               </Text>
             )}
+          </View>
+        </View>
+
+        {/* Info strip: LOGGED date + rating */}
+        <View style={[styles.infoStrip, { backgroundColor: colors.bg2, borderBottomColor: colors.border }]}>
+          <View style={styles.loggedBadge}>
+            <Text style={[styles.loggedLabel, { color: accentHex, fontFamily: fonts.mono }]}>
+              {mode === 'dark' ? 'LOGGED' : 'ARCHIVED'}
+            </Text>
+            <Text style={[styles.loggedDate, { color: colors.ink3, fontFamily: fonts.mono }]}>
+              {new Date(displayLog.logged_at).toLocaleDateString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric',
+              }).toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.starsRow}>
+            {[1,2,3,4,5].map(s => (
+              <Text key={s} style={[styles.starSmall, { color: (displayLog.rating ?? 0) >= s ? accentHex : colors.border2 }]}>★</Text>
+            ))}
           </View>
         </View>
 
@@ -651,10 +674,10 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
           {tab === 'notes'    && <NotesTab />}
         </ScrollView>
 
-        {/* Footer */}
-        <View style={[styles.footer, { borderTopColor: colors.border }]}>
-          {tab === 'notes' ? (
-            editing ? (
+        {/* Footer — only shown on Notes tab */}
+        {tab === 'notes' && (
+          <View style={[styles.footer, { borderTopColor: colors.border }]}>
+            {editing ? (
               <View style={styles.footerRow}>
                 <TouchableOpacity
                   style={[styles.cancelBtn, { borderColor: colors.border2 }]}
@@ -683,17 +706,9 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
               >
                 <Text style={[styles.editTxt, { color: accentHex, fontFamily: fonts.mono }]}>EDIT LOG</Text>
               </TouchableOpacity>
-            )
-          ) : (
-            <TouchableOpacity
-              style={[styles.closeBtn, { borderColor: colors.border2 }]}
-              onPress={onClose}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.closeTxt, { color: colors.ink3, fontFamily: fonts.mono }]}>CLOSE</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            )}
+          </View>
+        )}
       </Animated.View>
     </Modal>
   );
@@ -712,38 +727,72 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 2,
     overflow: 'hidden',
   },
-  accentBar: { height: 3, width: '100%' },
-  topBar: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
   handle: { width: 40, height: 3, borderRadius: 2 },
 
-  // Hero row
-  heroRow: {
-    flexDirection: 'row',
-    gap: 14,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
+  // Full-bleed cover hero
+  heroCover: {
+    width: '100%',
+    height: 240,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  cover: {
-    width: 72, height: 100,
-    borderWidth: 1,
+  coverImg: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+  },
+  coverScrimTop: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: 60,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  coverScrimBottom: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    height: 130,
+  },
+  coverHandleRow: {
+    position: 'absolute',
+    top: 10, left: 0, right: 0,
     alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
   },
-  coverFallback: { fontSize: 20, letterSpacing: 2 },
-  heroMeta: { flex: 1, gap: 6, justifyContent: 'center' },
+  coverCloseBtn: {
+    position: 'absolute',
+    top: 30, right: 16,
+  },
+  coverCloseTxt: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+  },
   typePill: {
-    alignSelf: 'flex-start',
+    position: 'absolute',
+    top: 36, left: 16,
     borderWidth: 1,
     paddingHorizontal: 7, paddingVertical: 2,
   },
   typeText: { fontSize: 7, letterSpacing: 2 },
-  title: { fontSize: 18, letterSpacing: 2, lineHeight: 22 },
-  creator: { fontSize: 13, fontStyle: 'italic' },
+  coverTitleArea: {
+    position: 'absolute',
+    bottom: 14, left: 16, right: 16,
+    gap: 4,
+  },
+  coverTitle: { fontSize: 26, letterSpacing: 2, lineHeight: 30 },
+  coverCreator: { fontSize: 13, fontStyle: 'italic' },
+
+  // Info strip
+  infoStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  loggedBadge: { gap: 1 },
+  loggedLabel: { fontSize: 8, letterSpacing: 2 },
+  loggedDate: { fontSize: 10, letterSpacing: 1 },
+  starsRow: { flexDirection: 'row', gap: 2 },
+  starSmall: { fontSize: 16 },
 
   // Tab bar
   tabBar: {
