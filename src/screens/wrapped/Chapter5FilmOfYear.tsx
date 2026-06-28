@@ -58,7 +58,7 @@ export default function Chapter5FilmOfYear({ data }: { data: WrappedData }) {
             </View>
 
             <View style={styles.filmMeta}>
-              <Text style={[styles.title, { fontFamily: fonts.display, color: W.cream }]} numberOfLines={3}>
+              <Text style={[styles.title, { fontFamily: fonts.brand, color: W.cream }]} numberOfLines={3}>
                 {film.title.toUpperCase()}
               </Text>
               {film.creator && (

@@ -36,7 +36,7 @@ export default function Chapter4BookOfYear({ data }: { data: WrappedData }) {
                   {'★'.repeat(book.rating)}
                 </Text>
               )}
-              <Text style={[styles.title, { fontFamily: fonts.display, color: W.ink }]} numberOfLines={4}>
+              <Text style={[styles.title, { fontFamily: fonts.brand, color: W.ink }]} numberOfLines={4}>
                 {book.title.toUpperCase()}
               </Text>
               {book.creator && (

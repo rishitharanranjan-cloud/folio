@@ -57,7 +57,7 @@ export default function Chapter6AlbumOfYear({ data }: { data: WrappedData }) {
 
             {/* Meta */}
             <View style={styles.meta}>
-              <Text style={[styles.title, { fontFamily: fonts.display, color: W.cream }]} numberOfLines={2}>
+              <Text style={[styles.title, { fontFamily: fonts.brand, color: W.cream }]} numberOfLines={2}>
                 {album.title.toUpperCase()}
               </Text>
               {album.creator && (

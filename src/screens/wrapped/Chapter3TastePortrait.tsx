@@ -78,7 +78,7 @@ export default function Chapter3TastePortrait({ data }: { data: WrappedData }) {
               MOST RETURNED TO
             </Text>
             {data.topCreators.map((c, i) => (
-              <Text key={c.name} style={[styles.creator, { fontFamily: fonts.display, color: i === 0 ? W.mustard : W.cream, opacity: 1 - i * 0.15 }]}>
+              <Text key={c.name} style={[styles.creator, { fontFamily: fonts.brand, color: i === 0 ? W.mustard : W.cream, opacity: 1 - i * 0.15 }]}>
                 {c.name.toUpperCase()}
               </Text>
             ))}

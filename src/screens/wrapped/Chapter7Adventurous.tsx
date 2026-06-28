@@ -32,7 +32,7 @@ export default function Chapter7Adventurous({ data }: { data: WrappedData }) {
               <Text style={[styles.mediaType, { fontFamily: fonts.mono, color: W.terracotta }]}>
                 {MEDIA_ICON[pick.media_type]}  {pick.media_type.toUpperCase()}
               </Text>
-              <Text style={[styles.title, { fontFamily: fonts.display, color: W.ink }]} numberOfLines={3}>
+              <Text style={[styles.title, { fontFamily: fonts.brand, color: W.ink }]} numberOfLines={3}>
                 {pick.title.toUpperCase()}
               </Text>
               {pick.creator && (

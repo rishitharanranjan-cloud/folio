@@ -37,7 +37,7 @@ export default function Chapter1GrandPick({ data }: { data: WrappedData }) {
               <Text style={[styles.mediaType, { fontFamily: fonts.mono, color: W.mustard }]}>
                 {pick.media_type.toUpperCase()}  ·  {pick.year ?? ''}
               </Text>
-              <Text style={[styles.title, { fontFamily: fonts.display, color: W.cream }]} numberOfLines={3}>
+              <Text style={[styles.title, { fontFamily: fonts.brand, color: W.cream }]} numberOfLines={3}>
                 {pick.title.toUpperCase()}
               </Text>
               {pick.creator && (
