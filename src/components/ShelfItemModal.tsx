@@ -77,6 +77,8 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
   useEffect(() => { if (log) lastLog.current = log; }, [log]);
   const displayLog = log ?? lastLog.current;
 
+  const [open, setOpen] = useState(false);
+
   // Tab
   const [tab, setTab] = useState<Tab>('details');
 
@@ -113,6 +115,7 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
 
   useEffect(() => {
     if (log) {
+      setOpen(true);
       Animated.parallel([
         Animated.timing(bgO,    { toValue: 1, duration: 220, useNativeDriver: true }),
         Animated.spring(slideY, { toValue: 0, damping: 22, stiffness: 260, useNativeDriver: true }),
@@ -121,7 +124,7 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
       Animated.parallel([
         Animated.timing(bgO,    { toValue: 0, duration: 180, useNativeDriver: true }),
         Animated.timing(slideY, { toValue: SHEET_H, duration: 200, useNativeDriver: true }),
-      ]).start();
+      ]).start(({ finished }) => { if (finished) setOpen(false); });
     }
   }, [log]);
 
@@ -570,8 +573,10 @@ export default function ShelfItemModal({ log, onClose, onUpdated }: Props) {
     );
   };
 
+  if (!displayLog) return null;
+
   return (
-    <Modal transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={open} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       {/* Scrim */}
       <Animated.View style={[styles.scrim, { opacity: bgO }]}>
         <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} activeOpacity={1} />
