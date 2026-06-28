@@ -163,14 +163,14 @@ export default function ProfileScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Watermark */}
-        <Text style={[styles.watermark, { color: colors.ink, fontFamily: fonts.display }]}>FOLIO</Text>
+        <Text style={[styles.watermark, { color: colors.ink, fontFamily: fonts.brand }]}>folio.</Text>
 
         {/* Header row */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <View style={styles.headerLeft}>
             {/* Avatar placeholder */}
             <View style={[styles.avatar, { backgroundColor: colors.accent }]}>
-              <Text style={[styles.avatarInitial, { color: colors.accentt, fontFamily: fonts.display }]}>
+              <Text style={[styles.avatarInitial, { color: colors.accentt, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                 {profile.name ? profile.name[0].toUpperCase() : '?'}
               </Text>
             </View>
@@ -195,7 +195,7 @@ export default function ProfileScreen() {
                 </>
               ) : (
                 <>
-                  <Text style={[styles.name, { color: colors.ink, fontFamily: fonts.display }]}>
+                  <Text style={[styles.name, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                     {profile.name || 'Your Name'}
                   </Text>
                   <Text style={[styles.handle, { color: colors.ink3, fontFamily: fonts.mono }]}>
