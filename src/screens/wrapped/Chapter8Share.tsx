@@ -50,7 +50,7 @@ export default function Chapter8Share({ data, onClose }: Props) {
               Pick of the year: {data.grandPick.title}
             </Text>
           )}
-          <Text style={[styles.cardBrand, { fontFamily: fonts.display, color: 'rgba(245,237,216,0.15)' }]}>FOLIO</Text>
+          <Text style={[styles.cardBrand, { fontFamily: fonts.brand, color: 'rgba(245,237,216,0.15)' }]}>folio.</Text>
         </View>
 
         {/* Share buttons */}
