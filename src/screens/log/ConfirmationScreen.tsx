@@ -13,7 +13,8 @@ import { useAuthStore } from '../../store/authStore';
 import { supabase } from '../../lib/supabase';
 import { type SearchResult } from '../../lib/mediaSearch';
 import { getAmbientColour, clampAmbient, ambientToRgb } from '../../lib/ambientColour';
-import { fonts } from '../../theme/tokens';
+import { fonts, FOLIO_CODE_COLOURS } from '../../theme/tokens';
+import FolioCodeMark from '../../components/FolioCodeMark';
 
 const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
 
@@ -101,10 +102,16 @@ export default function ConfirmationScreen({ item, rating, review, onDone }: Pro
 
       {/* Title + creator + rating */}
       <Animated.View style={[styles.textWrap, textStyle]}>
+        <FolioCodeMark
+          size="small"
+          blocksColor="rgba(255,255,255,0.4)"
+          barColor={FOLIO_CODE_COLOURS[mode].bar}
+          dotColor={FOLIO_CODE_COLOURS[mode].dot}
+        />
         <Text style={[styles.loggedLabel, { color: 'rgba(255,255,255,0.5)', fontFamily: fonts.mono }]}>
-          {mediaLabel.toUpperCase()} LOGGED
+          {mediaLabel.toUpperCase()} {mode === 'dark' ? 'LOGGED' : 'ARCHIVED'}
         </Text>
-        <Text style={[styles.itemTitle, { color: '#fff', fontFamily: fonts.display }]} numberOfLines={3}>
+        <Text style={[styles.itemTitle, { color: '#fff', fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]} numberOfLines={3}>
           {item.title.toUpperCase()}
         </Text>
         {item.creator ? (

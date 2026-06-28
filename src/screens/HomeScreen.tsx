@@ -290,7 +290,13 @@ export default function HomeScreen() {
         {/* Empty state */}
         {(data?.totalLogged ?? 0) === 0 && (
           <View style={styles.empty}>
-            <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: fonts.display }]}>
+            <FolioCodeMark
+              size="medium"
+              blocksColor={FOLIO_CODE_COLOURS[mode].blocks}
+              barColor={FOLIO_CODE_COLOURS[mode].bar}
+              dotColor={FOLIO_CODE_COLOURS[mode].dot}
+            />
+            <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
               YOUR SHELF AWAITS
             </Text>
             <Text style={[styles.emptySub, { color: colors.ink3, fontFamily: fonts.body }]}>

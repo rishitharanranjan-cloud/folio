@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { fonts } from '../../theme/tokens';
+import FolioCodeMark from '../../components/FolioCodeMark';
 import { supabase } from '../../lib/supabase';
 
 interface Props {
@@ -63,7 +64,8 @@ export default function AuthScreen({ onAuth }: Props) {
       <Text style={styles.watermark}>FOLIO</Text>
 
       <View style={styles.content}>
-        <Text style={styles.wordmark}>FOLIO</Text>
+        <FolioCodeMark size="small" mode="dark" />
+        <Text style={styles.wordmark}>folio.</Text>
         <Text style={styles.sub}>your cultural life, logged</Text>
 
         <View style={styles.buttons}>
@@ -110,10 +112,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   wordmark: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.brand,
     fontSize: 56,
-    color: '#e0eaf8',
-    letterSpacing: 12,
+    color: '#EAF0F2',
+    letterSpacing: 2,
     marginBottom: 4,
   },
   sub: {

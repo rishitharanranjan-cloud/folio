@@ -8,6 +8,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { fonts } from '../../theme/tokens';
+import FolioCodeMark from '../../components/FolioCodeMark';
 
 interface Props {
   onFinish: () => void;
@@ -41,7 +42,8 @@ export default function SplashScreen({ onFinish }: Props) {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.inner, animStyle]}>
-        <Text style={styles.wordmark}>FOLIO</Text>
+        <FolioCodeMark size="medium" mode="dark" />
+        <Text style={styles.wordmark}>folio.</Text>
         <Text style={styles.tagline}>your cultural life, logged</Text>
       </Animated.View>
     </View>
@@ -60,10 +62,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   wordmark: {
-    fontFamily: fonts.display,
-    fontSize: 72,
-    color: '#e0eaf8',
-    letterSpacing: 16,
+    fontFamily: fonts.brand,
+    fontSize: 64,
+    color: '#EAF0F2',
+    letterSpacing: 4,
   },
   tagline: {
     fontFamily: fonts.body,

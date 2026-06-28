@@ -19,6 +19,8 @@ import GameCartridge from '../components/shelf/GameCartridge';
 import type { LogEntry } from '../hooks/useLogs';
 import { clampAmbient, hexToRgb, ambientToHex, getAmbientColour } from '../lib/ambientColour';
 import * as haptics from '../lib/haptics';
+import FolioCodeMark from '../components/FolioCodeMark';
+import { FOLIO_CODE_COLOURS } from '../theme/tokens';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -275,11 +277,17 @@ const coverGridStyles = StyleSheet.create({
 });
 
 // ── Empty state ───────────────────────────────────────────────────────────────
-function EmptyState({ tab, colors }: { tab: Tab; colors: any }) {
+function EmptyState({ tab, colors, mode }: { tab: Tab; colors: any; mode: 'dark' | 'light' }) {
   const msg = EMPTY_MESSAGES[tab];
   return (
     <View style={emptyStyles.container}>
-      <Text style={[emptyStyles.title, { color: colors.ink, fontFamily: fonts.display }]}>
+      <FolioCodeMark
+        size="medium"
+        blocksColor={FOLIO_CODE_COLOURS[mode].blocks}
+        barColor={FOLIO_CODE_COLOURS[mode].bar}
+        dotColor={FOLIO_CODE_COLOURS[mode].dot}
+      />
+      <Text style={[emptyStyles.title, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
         {msg.title}
       </Text>
       <Text style={[emptyStyles.sub, { color: colors.ink3, fontFamily: fonts.body }]}>
@@ -444,7 +452,7 @@ export default function ShelfScreen({ onOpenLog }: Props) {
           <ActivityIndicator color={colors.accent} />
         </View>
       ) : logs.length === 0 ? (
-        <EmptyState tab={activeTab} colors={colors} />
+        <EmptyState tab={activeTab} colors={colors} mode={mode} />
       ) : (
         <ScrollView
           style={styles.scroll}
