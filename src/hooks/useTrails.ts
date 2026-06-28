@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Image } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
@@ -125,12 +126,12 @@ export function useTrailDetail(trailId: string) {
           stopsLogged: (stopData ?? []).filter((s: any) => logged.has(s.title.toLowerCase())).length,
         });
       }
-      setStops(
-        (stopData ?? []).map((s: any) => ({
-          ...s,
-          cover_url: coverMap.get(s.title.toLowerCase()) ?? null,
-        }))
-      );
+      const mappedStops = (stopData ?? []).map((s: any) => ({
+        ...s,
+        cover_url: coverMap.get(s.title.toLowerCase()) ?? null,
+      }));
+      mappedStops.forEach((s) => { if (s.cover_url) Image.prefetch(s.cover_url).catch(() => {}); });
+      setStops(mappedStops);
       setLoggedTitles(logged);
       setLoading(false);
     };

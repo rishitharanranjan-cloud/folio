@@ -8,6 +8,7 @@ import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 import { supabase } from '../lib/supabase';
 import { fonts } from '../theme/tokens';
+import Skeleton from '../components/Skeleton';
 import { clampAmbient, hexToRgb, ambientToHex, getAmbientColour } from '../lib/ambientColour';
 import * as haptics from '../lib/haptics';
 import type { LogEntry } from '../hooks/useLogs';
@@ -213,7 +214,18 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-        <View style={styles.loader}><ActivityIndicator color={colors.accent} /></View>
+        <View style={styles.skeletonWrap}>
+          {/* Continue reading row */}
+          <Skeleton width={120} height={10} style={{ marginBottom: 20 }} />
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 32 }}>
+            {[0, 1, 2].map((i) => <Skeleton key={i} width={185} height={260} />)}
+          </View>
+          {/* Recent additions grid */}
+          <Skeleton width={140} height={10} style={{ marginBottom: 16 }} />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            {[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} width="30%" height={120} />)}
+          </View>
+        </View>
       </SafeAreaView>
     );
   }
@@ -334,6 +346,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  skeletonWrap: { flex: 1, paddingHorizontal: 28, paddingTop: 80 },
   watermark: {
     position: 'absolute', fontSize: 160, opacity: 0.03,
     bottom: -10, right: -10, letterSpacing: 8,

@@ -8,6 +8,7 @@ import { useThemeStore } from '../store/themeStore';
 import { useFeed, type FeedLog, type FeedTrailComplete, type ActivityItem } from '../hooks/useFeed';
 import CommentSheet from '../components/CommentSheet';
 import { fonts, FOLIO_CODE_COLOURS } from '../theme/tokens';
+import Skeleton from '../components/Skeleton';
 import FolioCodeMark from '../components/FolioCodeMark';
 import { hexToRgb, clampAmbient, ambientToHex } from '../lib/ambientColour';
 import { timeAgo } from '../lib/timeAgo';
@@ -254,7 +255,18 @@ export default function SocialScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.loader}><ActivityIndicator color={colors.accent} /></View>
+        <View style={styles.skeletonWrap}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={styles.skeletonCard}>
+              <Skeleton width={40} height={40} style={{ borderRadius: 2 }} />
+              <View style={{ flex: 1, gap: 8 }}>
+                <Skeleton width="60%" height={10} />
+                <Skeleton width="90%" height={10} />
+                <Skeleton width="40%" height={10} />
+              </View>
+            </View>
+          ))}
+        </View>
       ) : tab === 'activity' ? (
         /* ── ACTIVITY TAB ── */
         <ScrollView
@@ -369,6 +381,8 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 11, letterSpacing: 1.5 },
   tabLine: { position: 'absolute', bottom: 0, left: '10%', right: '10%', height: 2 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  skeletonWrap: { flex: 1, paddingHorizontal: 24, paddingTop: 20, gap: 16 },
+  skeletonCard: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   scroll: { flex: 1 },
   scrollContent: { gap: 0 },
   section: { gap: 0, paddingTop: 16 },

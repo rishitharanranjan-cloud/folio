@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Image } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/authStore';
 
@@ -55,6 +56,7 @@ export function useLogs(mediaType?: string, sortKey = 'date', statusFilter = 'al
       const { data, error: err } = await query;
       if (err) throw err;
       const rows = data ?? [];
+      rows.forEach((r: any) => { if (r.cover_url) Image.prefetch(r.cover_url).catch(() => {}); });
       setLogs(prev => append ? [...prev, ...rows] : rows);
       setHasMore(rows.length === PAGE_SIZE);
       offsetRef.current = pageOffset + rows.length;

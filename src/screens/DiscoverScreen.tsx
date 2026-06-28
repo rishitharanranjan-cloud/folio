@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, Image, ActivityIndicator, FlatList,
+  ScrollView, Image, ActivityIndicator, FlatList, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '../store/themeStore';
@@ -34,7 +34,9 @@ export default function DiscoverScreen({ onLogItem }: Props) {
   const [searching, setSearching]   = useState(false);
   const [selectedTrailId, setSelectedTrailId] = useState<string | null>(null);
 
-  const { trails, loading: trailsLoading } = useTrails();
+  const { trails, loading: trailsLoading, refetch: refetchTrails } = useTrails();
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => { setRefreshing(true); await refetchTrails(); setRefreshing(false); };
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runSearch = useCallback(async (q: string, type: MediaType) => {
@@ -140,7 +142,11 @@ export default function DiscoverScreen({ onLogItem }: Props) {
         )
       ) : (
         // ── Idle: trail discovery ───────────────────────────────────────────
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.idleContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.idleContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />}
+        >
           <Text style={[styles.sectionLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>
             DISCOVER TRAILS
           </Text>

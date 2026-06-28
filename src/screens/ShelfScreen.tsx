@@ -23,6 +23,7 @@ import { clampAmbient, hexToRgb, ambientToHex, getAmbientColour } from '../lib/a
 import * as haptics from '../lib/haptics';
 import FolioCodeMark from '../components/FolioCodeMark';
 import { FOLIO_CODE_COLOURS } from '../theme/tokens';
+import Skeleton from '../components/Skeleton';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -485,8 +486,12 @@ export default function ShelfScreen({ onOpenLog }: Props) {
 
       {/* Content */}
       {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator color={colors.accent} />
+        <View style={styles.skeletonWrap}>
+          <View style={styles.skeletonGrid}>
+            {Array.from({ length: 12 }).map((_, i) => (
+              <Skeleton key={i} width="30%" height={120} />
+            ))}
+          </View>
         </View>
       ) : logs.length === 0 ? (
         <EmptyState tab={activeTab} colors={colors} mode={mode} />
@@ -559,6 +564,8 @@ const styles = StyleSheet.create({
   },
   scroll: { flex: 1 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  skeletonWrap: { flex: 1, paddingHorizontal: 28, paddingTop: 20 },
+  skeletonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   loadMore: { padding: 20, alignItems: 'center' },
   loadMoreText: { fontSize: 10, letterSpacing: 2 },
 });
