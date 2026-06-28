@@ -49,7 +49,7 @@ export default function GameCartridge({ log, onSelect }: Props) {
         {/* Gold contacts at bottom */}
         <View style={styles.contacts}>
           {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-            <View key={i} style={[styles.contact, { backgroundColor: '#c8a040' }]} />
+            <View key={i} style={[styles.contact, { backgroundColor: colors.editorial }]} />
           ))}
         </View>
       </View>

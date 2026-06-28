@@ -117,9 +117,9 @@ function FilmStrip({ logs, colors, onSelect }: { logs: LogEntry[]; colors: any; 
   return (
     <View style={filmStyles.container}>
       {/* Film strip rail top */}
-      <View style={[filmStyles.rail, { backgroundColor: '#1a1a1a', borderColor: '#333' }]}>
+      <View style={[filmStyles.rail, { backgroundColor: '#0E0E0E', borderColor: '#1C1C1C' }]}>
         {Array.from({ length: 20 }).map((_, i) => (
-          <View key={i} style={[filmStyles.railHole, { backgroundColor: colors.bg }]} />
+          <View key={i} style={[filmStyles.railHole, { backgroundColor: colors.bg2 }]} />
         ))}
       </View>
 
@@ -130,9 +130,9 @@ function FilmStrip({ logs, colors, onSelect }: { logs: LogEntry[]; colors: any; 
       </ScrollView>
 
       {/* Film strip rail bottom */}
-      <View style={[filmStyles.rail, { backgroundColor: '#1a1a1a', borderColor: '#333' }]}>
+      <View style={[filmStyles.rail, { backgroundColor: '#0E0E0E', borderColor: '#1C1C1C' }]}>
         {Array.from({ length: 20 }).map((_, i) => (
-          <View key={i} style={[filmStyles.railHole, { backgroundColor: colors.bg }]} />
+          <View key={i} style={[filmStyles.railHole, { backgroundColor: colors.bg2 }]} />
         ))}
       </View>
     </View>

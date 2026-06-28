@@ -26,7 +26,7 @@ import { useLogs } from '../hooks/useLogs';
 import { useTasteSeeds } from '../hooks/useTasteSeeds';
 import Constellation from '../components/Constellation';
 import GoalRing from '../components/GoalRing';
-import { fonts, THEME_NAMES, dark as darkTheme, light as lightTheme, type ThemeMode } from '../theme/tokens';
+import { fonts, THEME_NAMES, THEME_DESCRIPTIONS, FOLIO_CODE_COLOURS, dark as darkTheme, light as lightTheme, type ThemeMode } from '../theme/tokens';
 import { W } from './wrapped/palette';
 import { computeStreaks } from '../lib/streaks';
 import FolioCodeMark from '../components/FolioCodeMark';
@@ -435,9 +435,17 @@ export default function ProfileScreen() {
                     onPress={() => setMode(m)}
                     activeOpacity={0.8}
                   >
-                    <FolioCodeMark size="small" color={t.accent} />
+                    <FolioCodeMark
+                      size="small"
+                      blocksColor={FOLIO_CODE_COLOURS[m].blocks}
+                      barColor={FOLIO_CODE_COLOURS[m].bar}
+                      dotColor={FOLIO_CODE_COLOURS[m].dot}
+                    />
                     <Text style={[styles.themeCardName, { color: t.ink, fontFamily: fonts.mono }]}>
                       {THEME_NAMES[m].toUpperCase()}
+                    </Text>
+                    <Text style={[styles.themeCardDesc, { color: t.ink2, fontFamily: fonts.body }]}>
+                      {THEME_DESCRIPTIONS[m]}
                     </Text>
                     {active && (
                       <View style={[styles.themeCardActive, { backgroundColor: t.accent }]}>
@@ -717,6 +725,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   themeCardName: { fontSize: 8, letterSpacing: 1.5 },
+  themeCardDesc: { fontSize: 11, fontStyle: 'italic', lineHeight: 15, marginTop: 1 },
   themeCardActive: {
     position: 'absolute',
     top: 8,

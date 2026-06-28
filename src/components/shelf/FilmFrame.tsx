@@ -9,6 +9,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
 import { fonts } from '../../theme/tokens';
+
+// Physical celluloid colours — intentionally theme-independent (real film is dark)
+const FILM_BODY   = '#0E0E0E';
+const FILM_BORDER = '#1C1C1C';
 import { getAmbientColour, ambientToHex } from '../../lib/ambientColour';
 import type { LogEntry } from '../../hooks/useLogs';
 
@@ -42,9 +46,9 @@ export default function FilmFrame({ log, onSelect }: Props) {
     <TouchableOpacity onPress={onPress} onLongPress={() => onSelect?.(log)} activeOpacity={0.9}>
       <Animated.View style={[styles.strip, frameStyle]}>
         {/* Top sprocket row */}
-        <View style={[styles.sprocketRow, { backgroundColor: '#1a1a1a' }]}>
+        <View style={[styles.sprocketRow, { backgroundColor: 'FILM_BODY' }]}>
           {Array.from({ length: HOLES }).map((_, i) => (
-            <View key={i} style={[styles.hole, { backgroundColor: colors.bg }]} />
+            <View key={i} style={[styles.hole, { backgroundColor: colors.bg2 }]} />
           ))}
         </View>
 
@@ -80,9 +84,9 @@ export default function FilmFrame({ log, onSelect }: Props) {
         </View>
 
         {/* Bottom sprocket row */}
-        <View style={[styles.sprocketRow, { backgroundColor: '#1a1a1a' }]}>
+        <View style={[styles.sprocketRow, { backgroundColor: 'FILM_BODY' }]}>
           {Array.from({ length: HOLES }).map((_, i) => (
-            <View key={i} style={[styles.hole, { backgroundColor: colors.bg }]} />
+            <View key={i} style={[styles.hole, { backgroundColor: colors.bg2 }]} />
           ))}
         </View>
 
@@ -97,9 +101,9 @@ export default function FilmFrame({ log, onSelect }: Props) {
 
 const styles = StyleSheet.create({
   strip: {
-    backgroundColor: '#111',
+    backgroundColor: FILM_BODY,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: FILM_BORDER,
     overflow: 'hidden',
     paddingHorizontal: 6,
   },

@@ -11,6 +11,8 @@ import { fonts } from '../theme/tokens';
 import { clampAmbient, hexToRgb, ambientToHex, getAmbientColour } from '../lib/ambientColour';
 import * as haptics from '../lib/haptics';
 import type { LogEntry } from '../hooks/useLogs';
+import FolioCodeMark from '../components/FolioCodeMark';
+import { FOLIO_CODE_COLOURS } from '../theme/tokens';
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -205,10 +207,16 @@ export default function HomeScreen() {
       >
         {/* Greeting */}
         <View style={styles.greetingBlock}>
+          <FolioCodeMark
+            size="small"
+            blocksColor={FOLIO_CODE_COLOURS[mode].blocks}
+            barColor={FOLIO_CODE_COLOURS[mode].bar}
+            dotColor={FOLIO_CODE_COLOURS[mode].dot}
+          />
           <Text style={[styles.greetingLine, { color: colors.ink3, fontFamily: fonts.body }]}>
             {greeting()},
           </Text>
-          <Text style={[styles.greetingName, { color: colors.ink, fontFamily: fonts.display }]}>
+          <Text style={[styles.greetingName, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
             {(data?.name || 'Reader').toUpperCase()}.
           </Text>
         </View>
