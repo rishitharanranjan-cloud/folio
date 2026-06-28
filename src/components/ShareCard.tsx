@@ -11,7 +11,8 @@ import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { useThemeStore } from '../store/themeStore';
 import { getAmbientColour, ambientToRgb, ambientToHex } from '../lib/ambientColour';
-import { fonts } from '../theme/tokens';
+import { fonts, FOLIO_CODE_COLOURS } from '../theme/tokens';
+import FolioCodeMark from './FolioCodeMark';
 import type { SearchResult } from '../lib/mediaSearch';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -48,11 +49,11 @@ function deriveColours(rgb: [number, number, number], mode: string, modeAccent: 
 const FORMAT_ASPECT: Record<Format, number> = { square: 1, story: 16/9, wide: 9/16 };
 
 function CardContent({
-  item, rating, review, variant, colours, format,
+  item, rating, review, variant, colours, format, mode,
 }: {
   item: SearchResult; rating: number; review?: string;
   variant: Variant; colours: ReturnType<typeof deriveColours>;
-  format: Format;
+  format: Format; mode: 'dark' | 'light';
 }) {
   const c = colours[variant];
   const isWide = format === 'wide';
@@ -81,7 +82,7 @@ function CardContent({
         <Text style={[styles.cardLogged, { color: 'rgba(255,255,255,0.5)', fontFamily: fonts.mono }]}>
           {item.mediaType.toUpperCase()} · LOGGED
         </Text>
-        <Text style={[styles.cardTitle, { color: '#fff', fontFamily: fonts.display }]} numberOfLines={3}>
+        <Text style={[styles.cardTitle, { color: '#fff', fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]} numberOfLines={3}>
           {item.title.toUpperCase()}
         </Text>
         {item.creator && (
@@ -99,9 +100,17 @@ function CardContent({
             "{review}"
           </Text>
         )}
-        <Text style={[styles.cardBrand, { color: 'rgba(255,255,255,0.2)', fontFamily: fonts.display }]}>
-          FOLIO
-        </Text>
+        <View style={styles.cardBrandRow}>
+          <FolioCodeMark
+            size="small"
+            blocksColor="rgba(255,255,255,0.2)"
+            barColor={FOLIO_CODE_COLOURS[mode].bar}
+            dotColor={FOLIO_CODE_COLOURS[mode].dot}
+          />
+          <Text style={[styles.cardBrand, { color: 'rgba(255,255,255,0.2)', fontFamily: fonts.brand }]}>
+            folio.
+          </Text>
+        </View>
       </View>
     </View>
   );
@@ -158,7 +167,7 @@ export default function ShareCard({ item, rating, review, onClose }: Props) {
           <ViewShot ref={shotRef} options={{ format: 'png', quality: 1 }}>
             <CardContent
               item={item} rating={rating} review={review}
-              variant={variant} colours={colours} format={format}
+              variant={variant} colours={colours} format={format} mode={mode}
             />
           </ViewShot>
         </View>
@@ -248,7 +257,8 @@ const styles = StyleSheet.create({
   cardCreator: { fontSize: 14, fontStyle: 'italic' },
   cardStars: { fontSize: 14, letterSpacing: 2 },
   cardReview: { fontSize: 12, fontStyle: 'italic', lineHeight: 17 },
-  cardBrand: { fontSize: 20, letterSpacing: 6, marginTop: 4 },
+  cardBrandRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  cardBrand: { fontSize: 18, letterSpacing: 2 },
   selectorRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 14,

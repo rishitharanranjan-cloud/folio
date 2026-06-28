@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '../store/themeStore';
-import { fonts } from '../theme/tokens';
+import { fonts, FOLIO_CODE_COLOURS } from '../theme/tokens';
+import FolioCodeMark from '../components/FolioCodeMark';
 import { searchMedia, type MediaType, type SearchResult } from '../lib/mediaSearch';
 import { useTrails } from '../hooks/useTrails';
 import TrailCard from './discover/TrailCard';
@@ -26,7 +27,7 @@ interface Props {
 }
 
 export default function DiscoverScreen({ onLogItem }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const [query, setQuery]           = useState('');
   const [mediaType, setMediaType]   = useState<MediaType>('film');
   const [results, setResults]       = useState<SearchResult[]>([]);
@@ -119,6 +120,7 @@ export default function DiscoverScreen({ onLogItem }: Props) {
           </View>
         ) : results.length === 0 ? (
           <View style={styles.centre}>
+            <FolioCodeMark size="medium" blocksColor={FOLIO_CODE_COLOURS[mode].blocks} barColor={FOLIO_CODE_COLOURS[mode].bar} dotColor={FOLIO_CODE_COLOURS[mode].dot} />
             <Text style={[styles.emptyTxt, { color: colors.ink3, fontFamily: fonts.mono }]}>
               NO RESULTS FOR "{query.toUpperCase()}"
             </Text>
@@ -145,9 +147,12 @@ export default function DiscoverScreen({ onLogItem }: Props) {
           {trailsLoading ? (
             <ActivityIndicator color={colors.accent} style={{ marginTop: 24 }} />
           ) : trails.length === 0 ? (
-            <Text style={[styles.emptyTxt, { color: colors.ink3, fontFamily: fonts.mono }]}>
-              NO TRAILS AVAILABLE YET
-            </Text>
+            <View style={[styles.centre, { marginTop: 40 }]}>
+              <FolioCodeMark size="medium" blocksColor={FOLIO_CODE_COLOURS[mode].blocks} barColor={FOLIO_CODE_COLOURS[mode].bar} dotColor={FOLIO_CODE_COLOURS[mode].dot} />
+              <Text style={[styles.emptyTxt, { color: colors.ink3, fontFamily: fonts.mono }]}>
+                NO TRAILS AVAILABLE YET
+              </Text>
+            </View>
           ) : (
             <View style={styles.trailList}>
               {trails.map(trail => (
