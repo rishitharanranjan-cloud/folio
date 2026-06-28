@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function PathSelectScreen({ onImport, onLogFirst, onTaste }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
 
   const options = [
     {
@@ -38,7 +38,7 @@ export default function PathSelectScreen({ onImport, onLogFirst, onTaste }: Prop
       <Text style={[styles.watermark, { color: colors.ink, fontFamily: fonts.display }]}>PATH</Text>
 
       <View style={styles.content}>
-        <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>
+        <Text style={[styles.heading, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
           HOW DO YOU{'\n'}WANT TO START?
         </Text>
         <Text style={[styles.sub, { color: colors.ink3, fontFamily: fonts.body }]}>

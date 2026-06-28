@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { fonts, dark, light, THEME_NAMES } from '../../theme/tokens';
+import { fonts, dark, light, THEME_DESCRIPTIONS, FOLIO_CODE_COLOURS } from '../../theme/tokens';
 import { useThemeStore } from '../../store/themeStore';
+import FolioCodeMark from '../../components/FolioCodeMark';
 
 const { width } = Dimensions.get('window');
 
@@ -19,35 +20,47 @@ export default function ModeSelectScreen({ onSelect }: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Dark half */}
+      {/* Nordic Frost half */}
       <TouchableOpacity
         style={[styles.half, { backgroundColor: dark.bg }]}
         onPress={() => choose('dark')}
         activeOpacity={0.85}
       >
+        <FolioCodeMark
+          size="small"
+          blocksColor={FOLIO_CODE_COLOURS.dark.blocks}
+          barColor={FOLIO_CODE_COLOURS.dark.bar}
+          dotColor={FOLIO_CODE_COLOURS.dark.dot}
+        />
         <Text style={[styles.modeName, { color: dark.ink, fontFamily: fonts.display }]}>
           NORDIC{'\n'}FROST
         </Text>
         <Text style={[styles.modeDesc, { color: dark.ink3, fontFamily: fonts.body }]}>
-          midnight fjord, arctic blue
+          {THEME_DESCRIPTIONS.dark}
         </Text>
         <View style={[styles.swatch, { backgroundColor: dark.accent }]} />
       </TouchableOpacity>
 
       {/* Divider */}
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: dark.border2 }]} />
 
-      {/* Light half */}
+      {/* Vintage Archive half */}
       <TouchableOpacity
         style={[styles.half, { backgroundColor: light.bg }]}
         onPress={() => choose('light')}
         activeOpacity={0.85}
       >
-        <Text style={[styles.modeName, { color: light.ink, fontFamily: fonts.display }]}>
-          VINTAGE{'\n'}ARCHIVE
+        <FolioCodeMark
+          size="small"
+          blocksColor={FOLIO_CODE_COLOURS.light.blocks}
+          barColor={FOLIO_CODE_COLOURS.light.bar}
+          dotColor={FOLIO_CODE_COLOURS.light.dot}
+        />
+        <Text style={[styles.modeName, { color: light.ink, fontFamily: fonts.brand }]}>
+          Vintage{'\n'}Archive
         </Text>
         <Text style={[styles.modeDesc, { color: light.ink3, fontFamily: fonts.body }]}>
-          archive paper, tamarind
+          {THEME_DESCRIPTIONS.light}
         </Text>
         <View style={[styles.swatch, { backgroundColor: light.accent }]} />
       </TouchableOpacity>

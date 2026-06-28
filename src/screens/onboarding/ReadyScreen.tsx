@@ -7,7 +7,8 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import { useThemeStore } from '../../store/themeStore';
-import { fonts } from '../../theme/tokens';
+import { fonts, FOLIO_CODE_COLOURS } from '../../theme/tokens';
+import FolioCodeMark from '../../components/FolioCodeMark';
 
 interface Props {
   name: string;
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export default function ReadyScreen({ name, onEnter }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const opacity1 = useSharedValue(0);
   const opacity2 = useSharedValue(0);
   const opacity3 = useSharedValue(0);
@@ -33,10 +34,18 @@ export default function ReadyScreen({ name, onEnter }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <View style={styles.content}>
+        <Animated.View style={s1}>
+          <FolioCodeMark
+            size="small"
+            blocksColor={FOLIO_CODE_COLOURS[mode].blocks}
+            barColor={FOLIO_CODE_COLOURS[mode].bar}
+            dotColor={FOLIO_CODE_COLOURS[mode].dot}
+          />
+        </Animated.View>
         <Animated.Text style={[styles.greeting, { color: colors.ink3, fontFamily: fonts.body }, s1]}>
           welcome,
         </Animated.Text>
-        <Animated.Text style={[styles.name, { color: colors.ink, fontFamily: fonts.display }, s2]}>
+        <Animated.Text style={[styles.name, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }, s2]}>
           {name.toUpperCase() || 'READER'}
         </Animated.Text>
         <Animated.Text style={[styles.sub, { color: colors.ink2, fontFamily: fonts.body }, s2]}>

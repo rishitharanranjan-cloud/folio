@@ -20,7 +20,7 @@ interface Props {
 }
 
 export default function NameHandleScreen({ onNext }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const { user } = useAuthStore();
   const [name, setName] = useState('');
   const [handle, setHandle] = useState('');
@@ -56,7 +56,7 @@ export default function NameHandleScreen({ onNext }: Props) {
       <Text style={[styles.watermark, { color: colors.ink, fontFamily: fonts.display }]}>NAME</Text>
 
       <View style={styles.content}>
-        <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>
+        <Text style={[styles.heading, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
           WHO ARE YOU?
         </Text>
         <Text style={[styles.sub, { color: colors.ink3, fontFamily: fonts.body }]}>

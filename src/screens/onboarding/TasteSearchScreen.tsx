@@ -47,7 +47,7 @@ interface Props {
 }
 
 export default function TasteSearchScreen({ onNext }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const { user } = useAuthStore();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -95,7 +95,7 @@ export default function TasteSearchScreen({ onNext }: Props) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <View style={styles.header}>
-        <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>
+        <Text style={[styles.heading, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
           YOUR TASTE
         </Text>
         <Text style={[styles.sub, { color: colors.ink3, fontFamily: fonts.body }]}>
