@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Modal,
+  ActivityIndicator, Modal, Image,
 } from 'react-native';
 import { useThemeStore } from '../../store/themeStore';
 import { useTrailDetail } from '../../hooks/useTrails';
@@ -170,29 +170,49 @@ export default function TrailDetailSheet({ trailId, onClose }: Props) {
                         borderLeftColor: stopColour,
                       }
                     ]}>
-                      <View style={styles.stopCardTop}>
-                        <View style={[styles.mediaChip, { borderColor: isLogged ? stopColour : colors.border2 }]}>
-                          <Text style={[styles.mediaChipTxt, { color: isLogged ? stopColour : colors.ink3, fontFamily: fonts.mono }]}>
-                            {MEDIA_LABEL[stop.media_type] ?? stop.media_type.toUpperCase()}
+                      {/* Text + cover row */}
+                      <View style={styles.stopCardInner}>
+                        <View style={styles.stopCardText}>
+                          <View style={styles.stopCardTop}>
+                            <View style={[styles.mediaChip, { borderColor: isLogged ? stopColour : colors.border2 }]}>
+                              <Text style={[styles.mediaChipTxt, { color: isLogged ? stopColour : colors.ink3, fontFamily: fonts.mono }]}>
+                                {MEDIA_LABEL[stop.media_type] ?? stop.media_type.toUpperCase()}
+                              </Text>
+                            </View>
+                            {isLogged && (
+                              <Text style={[styles.loggedTag, { color: stopColour, fontFamily: fonts.mono }]}>
+                                LOGGED
+                              </Text>
+                            )}
+                          </View>
+                          <Text style={[styles.stopTitle, {
+                            color: isLogged ? colors.ink : colors.ink2,
+                            fontFamily: fonts.display,
+                          }]} numberOfLines={2}>
+                            {stop.title.toUpperCase()}
                           </Text>
+                          {stop.creator && (
+                            <Text style={[styles.stopCreator, { color: colors.ink3, fontFamily: fonts.mono }]} numberOfLines={1}>
+                              {stop.creator}
+                            </Text>
+                          )}
                         </View>
-                        {isLogged && (
-                          <Text style={[styles.loggedTag, { color: stopColour, fontFamily: fonts.mono }]}>
-                            LOGGED
-                          </Text>
+
+                        {/* Cover thumbnail */}
+                        {stop.cover_url ? (
+                          <Image
+                            source={{ uri: stop.cover_url }}
+                            style={[styles.stopCover, { borderColor: isLogged ? stopColour : colors.border }]}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={[styles.stopCover, styles.stopCoverPlaceholder, { backgroundColor: `${stopColour}20`, borderColor: isLogged ? stopColour : colors.border }]}>
+                            <Text style={[styles.stopCoverInitial, { color: stopColour, fontFamily: fonts.mono }]}>
+                              {stop.title.slice(0, 1).toUpperCase()}
+                            </Text>
+                          </View>
                         )}
                       </View>
-                      <Text style={[styles.stopTitle, {
-                        color: isLogged ? colors.ink : colors.ink2,
-                        fontFamily: fonts.display,
-                      }]} numberOfLines={2}>
-                        {stop.title.toUpperCase()}
-                      </Text>
-                      {stop.creator && (
-                        <Text style={[styles.stopCreator, { color: colors.ink3, fontFamily: fonts.mono }]} numberOfLines={1}>
-                          {stop.creator}
-                        </Text>
-                      )}
                     </View>
                   </View>
                 );
@@ -300,12 +320,33 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderLeftWidth: 3,
+  },
+  stopCardInner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  stopCardText: {
+    flex: 1,
     gap: 5,
   },
   stopCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  stopCover: {
+    width: 52,
+    aspectRatio: 2 / 3,
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  stopCoverPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stopCoverInitial: {
+    fontSize: 14,
   },
   mediaChip: {
     borderWidth: 1,

@@ -10,6 +10,7 @@ export interface TrailStop {
   creator: string | null;
   cover_colour: string | null;
   external_id: string | null;
+  cover_url?: string | null;
 }
 
 export interface Trail {
@@ -98,11 +99,16 @@ export function useTrailDetail(trailId: string) {
         supabase.from('trails').select('*').eq('id', trailId).maybeSingle(),
         supabase.from('trail_stops').select('*').eq('trail_id', trailId).order('position'),
         user
-          ? supabase.from('logs').select('title').eq('user_id', user.id)
+          ? supabase.from('logs').select('title,cover_url').eq('user_id', user.id)
           : Promise.resolve({ data: [] }),
       ]);
 
       const logged = new Set((userLogs ?? []).map((l: any) => l.title.toLowerCase()));
+      const coverMap = new Map<string, string>(
+        (userLogs ?? [])
+          .filter((l: any) => l.cover_url)
+          .map((l: any) => [l.title.toLowerCase(), l.cover_url as string])
+      );
 
       if (trailData) {
         const { data: ut } = await supabase
@@ -119,7 +125,12 @@ export function useTrailDetail(trailId: string) {
           stopsLogged: (stopData ?? []).filter((s: any) => logged.has(s.title.toLowerCase())).length,
         });
       }
-      setStops(stopData ?? []);
+      setStops(
+        (stopData ?? []).map((s: any) => ({
+          ...s,
+          cover_url: coverMap.get(s.title.toLowerCase()) ?? null,
+        }))
+      );
       setLoggedTitles(logged);
       setLoading(false);
     };

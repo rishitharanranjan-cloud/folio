@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, Dimensions, Image, FlatList,
 } from 'react-native';
+import { supabase } from '../lib/supabase';
+import { useAuthStore } from '../store/authStore';
 import WeeklyNudgeBanner from '../components/WeeklyNudgeBanner';
 import ShelfItemModal from '../components/ShelfItemModal';
 import { shouldShowInAppNudge } from '../lib/habitNudge';
@@ -24,7 +26,9 @@ import { FOLIO_CODE_COLOURS } from '../theme/tokens';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-type Tab = 'book' | 'film' | 'tv' | 'album' | 'podcast' | 'game';
+type Tab = 'all' | 'book' | 'film' | 'tv' | 'album' | 'podcast' | 'game';
+type MediaTab = Exclude<Tab, 'all'>;
+type TabCounts = Partial<Record<Tab, number>>;
 type SortKey = 'date' | 'rating' | 'title' | 'year';
 type StatusFilter = 'all' | 'finished' | 'in_progress' | 'dropped' | 'abandoned';
 
@@ -44,6 +48,7 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
 ];
 
 const TABS: { key: Tab; label: string }[] = [
+  { key: 'all',     label: 'ALL'    },
   { key: 'book',    label: 'BOOKS'  },
   { key: 'film',    label: 'FILMS'  },
   { key: 'tv',      label: 'TV'     },
@@ -53,6 +58,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 const EMPTY_MESSAGES: Record<Tab, { title: string; sub: string }> = {
+  all:     { title: 'NOTHING LOGGED YET', sub: 'Start logging books, films, albums, games, and more.' },
   book:    { title: 'EMPTY SHELF',       sub: 'Your books will line up here as spines, spine by spine.' },
   film:    { title: 'NO REELS YET',      sub: 'Log a film and it appears in its film strip frame.' },
   tv:      { title: 'NO CASES YET',      sub: 'Logged TV shows stack here as DVD cases.' },
@@ -164,7 +170,7 @@ const filmStyles = StyleSheet.create({
 });
 
 // ── Generic grid for TV, Albums, Podcasts, Games ─────────────────────────────
-function ShelfGrid({ logs, type, onSelect }: { logs: LogEntry[]; type: Tab; onSelect: (log: LogEntry) => void }) {
+function ShelfGrid({ logs, type, onSelect }: { logs: LogEntry[]; type: MediaTab; onSelect: (log: LogEntry) => void }) {
   const renderItem = (log: LogEntry) => {
     switch (type) {
       case 'tv':      return <DVDCase      key={log.id} log={log} onSelect={onSelect} />;
@@ -315,11 +321,33 @@ interface Props { onOpenLog?: () => void }
 
 export default function ShelfScreen({ onOpenLog }: Props) {
   const { colors, mode } = useThemeStore();
-  const [activeTab, setActiveTab] = useState<Tab>('book');
+  const { user } = useAuthStore();
+  const [activeTab, setActiveTab] = useState<Tab>('all');
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [gridView, setGridView] = useState(false);
-  const { logs, loading, loadingMore, hasMore, refetch, loadMore } = useLogs(activeTab, sortKey, statusFilter);
+  const [counts, setCounts] = useState<TabCounts>({});
+
+  // Fetch per-type counts once
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('logs')
+      .select('media_type')
+      .eq('user_id', user.id)
+      .then(({ data }) => {
+        const c: TabCounts = { all: 0 };
+        for (const row of (data ?? [])) {
+          const mt = row.media_type as MediaTab;
+          c[mt] = (c[mt] ?? 0) + 1;
+          c.all = (c.all ?? 0) + 1;
+        }
+        setCounts(c);
+      });
+  }, [user]);
+
+  const mediaTypeForQuery = activeTab === 'all' ? undefined : activeTab;
+  const { logs, loading, loadingMore, hasMore, refetch, loadMore } = useLogs(mediaTypeForQuery, sortKey, statusFilter);
   const [refreshing, setRefreshing] = useState(false);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
   const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
@@ -334,10 +362,11 @@ export default function ShelfScreen({ onOpenLog }: Props) {
   };
 
   const renderShelf = () => {
-    if (gridView) return <CoverGrid logs={logs} mode={mode} colors={colors} onSelect={setSelectedLog} />;
+    if (activeTab === 'all' || gridView)
+      return <CoverGrid logs={logs} mode={mode} colors={colors} onSelect={setSelectedLog} />;
     if (activeTab === 'book') return <BookShelf logs={logs} colors={colors} onSelect={setSelectedLog} />;
     if (activeTab === 'film') return <FilmStrip logs={logs} colors={colors} onSelect={setSelectedLog} />;
-    return <ShelfGrid logs={logs} type={activeTab} onSelect={setSelectedLog} />;
+    return <ShelfGrid logs={logs} type={activeTab as MediaTab} onSelect={setSelectedLog} />;
   };
 
   return (
@@ -350,7 +379,7 @@ export default function ShelfScreen({ onOpenLog }: Props) {
         <View>
           <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>MY SHELF</Text>
           <Text style={[styles.count, { color: colors.ink3, fontFamily: fonts.mono }]}>
-            {loading ? '…' : `${logs.length}${hasMore ? '+' : ''} ${TABS.find(t => t.key === activeTab)?.label.toLowerCase() ?? ''}`}
+            {loading ? '…' : `${counts[activeTab] ?? logs.length}${hasMore ? '+' : ''} ${TABS.find(t => t.key === activeTab)?.label.toLowerCase() ?? ''}`}
           </Text>
         </View>
         <TouchableOpacity
@@ -375,7 +404,7 @@ export default function ShelfScreen({ onOpenLog }: Props) {
           <TouchableOpacity
             key={t.key}
             style={styles.tab}
-            onPress={() => setActiveTab(t.key)}
+            onPress={() => { haptics.tapLight(); setActiveTab(t.key); }}
             activeOpacity={0.7}
           >
             <Text style={[styles.tabText, {
@@ -384,6 +413,14 @@ export default function ShelfScreen({ onOpenLog }: Props) {
             }]}>
               {t.label}
             </Text>
+            {counts[t.key] !== undefined && (
+              <Text style={[styles.tabCount, {
+                color: activeTab === t.key ? colors.accent : colors.ink3,
+                fontFamily: fonts.mono,
+              }]}>
+                {counts[t.key]}
+              </Text>
+            )}
             {activeTab === t.key && (
               <View style={[styles.tabLine, { backgroundColor: colors.accent }]} />
             )}
@@ -508,13 +545,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   viewToggleTxt: { fontSize: 9, letterSpacing: 1.5 },
-  tabsScroll: { borderBottomWidth: 1, maxHeight: 44 },
+  tabsScroll: { borderBottomWidth: 1, maxHeight: 56 },
   tabsContent: { paddingHorizontal: 16 },
   tab: {
-    paddingHorizontal: 12, paddingVertical: 12,
-    position: 'relative', alignItems: 'center',
+    paddingHorizontal: 12, paddingVertical: 10,
+    position: 'relative', alignItems: 'center', gap: 2,
   },
-  tabText: { fontSize: 10, letterSpacing: 1.5 },
+  tabText: { fontSize: 9, letterSpacing: 1.5 },
+  tabCount: { fontSize: 9, letterSpacing: 0.5, opacity: 0.7 },
   tabLine: {
     position: 'absolute', bottom: 0,
     left: '10%', right: '10%', height: 2,
