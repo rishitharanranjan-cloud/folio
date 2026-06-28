@@ -49,17 +49,18 @@ const STATUS_OPTIONS = [
 interface Props {
   onClose: () => void;
   onLogged: (item: SearchResult, rating: number, review?: string, completedTrail?: { id: string; title: string }) => void;
+  initialItem?: SearchResult;
 }
 
-export default function LogModal({ onClose, onLogged }: Props) {
+export default function LogModal({ onClose, onLogged, initialItem }: Props) {
   const { colors, mode } = useThemeStore();
   const { user } = useAuthStore();
 
-  const [mediaType, setMediaType] = useState<MediaType>('film');
+  const [mediaType, setMediaType] = useState<MediaType>(initialItem?.mediaType ?? 'film');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<SearchResult | null>(null);
+  const [selected, setSelected] = useState<SearchResult | null>(initialItem ?? null);
   const [rating, setRating] = useState(0);
   const [status, setStatus] = useState('finished');
   const [review, setReview] = useState('');

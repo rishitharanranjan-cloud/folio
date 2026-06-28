@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import ShelfScreen from '../screens/ShelfScreen';
-import TrailsScreen from '../screens/TrailsScreen';
+import DiscoverScreen from '../screens/DiscoverScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LogModal from '../screens/log/LogModal';
 import ConfirmationScreen from '../screens/log/ConfirmationScreen';
@@ -81,6 +81,7 @@ function LogSpacer() {
 export default function TabNavigator() {
   const { user } = useAuthStore();
   const [logOpen, setLogOpen] = useState(false);
+  const [logInitialItem, setLogInitialItem] = useState<SearchResult | undefined>(undefined);
   const [confirmed, setConfirmed] = useState<{ item: SearchResult; rating: number; review?: string } | null>(null);
   const [completedTrail, setCompletedTrail] = useState<{ id: string; title: string } | null>(null);
   const [milestone, setMilestone] = useState<MilestoneType | null>(null);
@@ -130,15 +131,18 @@ export default function TabNavigator() {
           {() => <ShelfScreen onOpenLog={() => setLogOpen(true)} />}
         </Tab.Screen>
         <Tab.Screen name="Log"     component={LogSpacer}     options={{ tabBarLabel: 'Log'    }} />
-        <Tab.Screen name="Trails"  component={TrailsScreen}  options={{ tabBarLabel: 'Trails' }} />
+        <Tab.Screen name="Discover" options={{ tabBarLabel: 'Search' }}>
+          {() => <DiscoverScreen onLogItem={(item) => { setLogInitialItem(item); setLogOpen(true); }} />}
+        </Tab.Screen>
         <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Profile'}} />
       </Tab.Navigator>
 
       {/* Log modal */}
-      <Modal visible={logOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setLogOpen(false)}>
+      <Modal visible={logOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => { setLogOpen(false); setLogInitialItem(undefined); }}>
         <LogModal
-          onClose={() => setLogOpen(false)}
+          onClose={() => { setLogOpen(false); setLogInitialItem(undefined); }}
           onLogged={(item, rating, review, trail) => handleLogged(item, rating, review, trail)}
+          initialItem={logInitialItem}
         />
       </Modal>
 
