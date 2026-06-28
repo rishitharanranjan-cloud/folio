@@ -7,7 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useThemeStore } from '../store/themeStore';
 import { useFeed, type FeedLog, type FeedTrailComplete, type ActivityItem } from '../hooks/useFeed';
 import CommentSheet from '../components/CommentSheet';
-import { fonts } from '../theme/tokens';
+import { fonts, FOLIO_CODE_COLOURS } from '../theme/tokens';
+import FolioCodeMark from '../components/FolioCodeMark';
 import { hexToRgb, clampAmbient, ambientToHex } from '../lib/ambientColour';
 import { timeAgo } from '../lib/timeAgo';
 
@@ -83,7 +84,7 @@ function LogCard({
           </Text>
 
           {/* Title */}
-          <Text style={[styles.title, { color: colors.ink, fontFamily: fonts.display }]} numberOfLines={2}>
+          <Text style={[styles.title, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]} numberOfLines={2}>
             {item.title.toUpperCase()}
           </Text>
 
@@ -160,7 +161,7 @@ function LogCard({
 }
 
 // ── Trail completion card ──────────────────────────────────────────────────
-function TrailCompleteCard({ item, colors }: { item: FeedTrailComplete; colors: any }) {
+function TrailCompleteCard({ item, colors, mode }: { item: FeedTrailComplete; colors: any; mode: 'dark' | 'light' }) {
   return (
     <View style={[styles.trailCard, { backgroundColor: colors.bg2, borderColor: colors.streak }]}>
       <View style={[styles.trailCardAccent, { backgroundColor: colors.streak }]} />
@@ -170,7 +171,7 @@ function TrailCompleteCard({ item, colors }: { item: FeedTrailComplete; colors: 
           <Text style={[styles.trailCardUser, { color: colors.ink3, fontFamily: fonts.mono }]}>
             {item.isOwn ? 'YOU' : `@${item.user_handle ?? item.user_name ?? 'unknown'}`}
           </Text>
-          <Text style={[styles.trailCardTitle, { color: colors.ink, fontFamily: fonts.display }]}>
+          <Text style={[styles.trailCardTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
             COMPLETED{'\n'}{item.trail_title.toUpperCase()}
           </Text>
           <Text style={[styles.trailCardTime, { color: colors.ink3, fontFamily: fonts.mono }]}>
@@ -229,7 +230,7 @@ export default function SocialScreen() {
 
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>FEED</Text>
+        <Text style={[styles.heading, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>FEED</Text>
         {activity.length > 0 && tab === 'feed' && (
           <View style={[styles.badge, { backgroundColor: colors.editorial }]}>
             <Text style={[styles.badgeText, { color: '#fff', fontFamily: fonts.mono }]}>{activity.length}</Text>
@@ -263,7 +264,8 @@ export default function SocialScreen() {
         >
           {activity.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: fonts.display }]}>NO ACTIVITY YET</Text>
+              <FolioCodeMark size="medium" blocksColor={FOLIO_CODE_COLOURS[mode].blocks} barColor={FOLIO_CODE_COLOURS[mode].bar} dotColor={FOLIO_CODE_COLOURS[mode].dot} />
+              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>NO ACTIVITY YET</Text>
               <Text style={[styles.emptyText, { color: colors.ink3, fontFamily: fonts.body }]}>
                 When people react to your logs, you'll see it here.
               </Text>
@@ -286,7 +288,7 @@ export default function SocialScreen() {
             <View style={[styles.findPeople, { backgroundColor: colors.bg2, borderColor: colors.border2 }]}>
               <View style={[styles.findPeopleBar, { backgroundColor: colors.accent }]} />
               <View style={styles.findPeopleText}>
-                <Text style={[styles.findPeopleTitle, { color: colors.ink, fontFamily: fonts.display }]}>
+                <Text style={[styles.findPeopleTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                   FIND PEOPLE
                 </Text>
                 <Text style={[styles.findPeopleSub, { color: colors.ink3, fontFamily: fonts.body }]}>
@@ -303,7 +305,7 @@ export default function SocialScreen() {
               {ownEvents.slice(0, 5).map((e) =>
                 e.type === 'log'
                   ? <LogCard key={e.id} item={e} colors={colors} mode={mode} onReact={toggleReaction} onComment={(id, title) => setCommentTarget({ id, title })} />
-                  : <TrailCompleteCard key={e.id} item={e} colors={colors} />
+                  : <TrailCompleteCard key={e.id} item={e} colors={colors} mode={mode} />
               )}
             </View>
           )}
@@ -315,14 +317,15 @@ export default function SocialScreen() {
               {feedEvents.map((e) =>
                 e.type === 'log'
                   ? <LogCard key={e.id} item={e} colors={colors} mode={mode} onReact={toggleReaction} onComment={(id, title) => setCommentTarget({ id, title })} />
-                  : <TrailCompleteCard key={e.id} item={e} colors={colors} />
+                  : <TrailCompleteCard key={e.id} item={e} colors={colors} mode={mode} />
               )}
             </View>
           )}
 
           {hasFollowing && feedEvents.length === 0 && ownEvents.length === 0 && (
             <View style={styles.empty}>
-              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: fonts.display }]}>NOTHING YET</Text>
+              <FolioCodeMark size="medium" blocksColor={FOLIO_CODE_COLOURS[mode].blocks} barColor={FOLIO_CODE_COLOURS[mode].bar} dotColor={FOLIO_CODE_COLOURS[mode].dot} />
+              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>NOTHING YET</Text>
               <Text style={[styles.emptyText, { color: colors.ink3, fontFamily: fonts.body }]}>
                 The people you follow haven't logged anything yet.
               </Text>
