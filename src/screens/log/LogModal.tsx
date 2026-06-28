@@ -175,7 +175,7 @@ export default function LogModal({ onClose, onLogged, initialItem }: Props) {
 
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.ink, fontFamily: fonts.display }]}>LOG IT</Text>
+        <Text style={[styles.title, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>LOG IT</Text>
         <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <Text style={[styles.closeBtn, { color: colors.ink3, fontFamily: fonts.mono }]}>✕</Text>
         </TouchableOpacity>
@@ -329,7 +329,7 @@ export default function LogModal({ onClose, onLogged, initialItem }: Props) {
                 <Image source={{ uri: selected.coverUrl }} style={styles.selectedCover} />
               )}
               <View style={styles.selectedMeta}>
-                <Text style={[styles.selectedTitle, { color: colors.ink, fontFamily: fonts.display }]}>
+                <Text style={[styles.selectedTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                   {selected.title.toUpperCase()}
                 </Text>
                 {selected.creator ? (
@@ -452,7 +452,7 @@ export default function LogModal({ onClose, onLogged, initialItem }: Props) {
           >
             {saving
               ? <ActivityIndicator color={colors.accentt} />
-              : <Text style={[styles.logBtnText, { color: colors.accentt, fontFamily: fonts.display }]}>
+              : <Text style={[styles.logBtnText, { color: colors.accentt, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                   LOG IT
                 </Text>
             }
