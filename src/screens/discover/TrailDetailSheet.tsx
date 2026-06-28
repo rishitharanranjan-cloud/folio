@@ -86,7 +86,7 @@ export default function TrailDetailSheet({ trailId, onClose }: Props) {
                   {trail.tag.toUpperCase()}
                 </Text>
               )}
-              <Text style={[styles.trailTitle, { color: colors.ink, fontFamily: fonts.display }]}>
+              <Text style={[styles.trailTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                 {trail.title.toUpperCase()}
               </Text>
               <Text style={[styles.desc, { color: colors.ink2, fontFamily: fonts.body }]}>
@@ -187,7 +187,7 @@ export default function TrailDetailSheet({ trailId, onClose }: Props) {
                           </View>
                           <Text style={[styles.stopTitle, {
                             color: isLogged ? colors.ink : colors.ink2,
-                            fontFamily: fonts.display,
+                            fontFamily: mode === 'dark' ? fonts.display : fonts.brand,
                           }]} numberOfLines={2}>
                             {stop.title.toUpperCase()}
                           </Text>

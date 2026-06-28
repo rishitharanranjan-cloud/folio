@@ -35,7 +35,7 @@ interface Props {
 }
 
 export default function TrailPickScreen({ onNext }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const { user } = useAuthStore();
   const [trails, setTrails] = useState<FeaturedTrail[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +83,7 @@ export default function TrailPickScreen({ onNext }: Props) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>
+        <Text style={[styles.heading, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
           JOIN A TRAIL
         </Text>
         <Text style={[styles.sub, { color: colors.ink3, fontFamily: fonts.body }]}>
@@ -121,7 +121,7 @@ export default function TrailPickScreen({ onNext }: Props) {
                     </Text>
                   </View>
 
-                  <Text style={[styles.cardTitle, { color: colors.ink, fontFamily: fonts.display }]}>
+                  <Text style={[styles.cardTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                     {trail.title.toUpperCase()}
                   </Text>
                   {trail.description && (

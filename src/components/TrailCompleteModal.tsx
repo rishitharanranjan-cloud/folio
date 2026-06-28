@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   trailTitle: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.brand,
     fontSize: 28,
     letterSpacing: 3,
     color: C.cream,

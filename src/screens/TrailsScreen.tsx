@@ -23,7 +23,7 @@ const TRAIL_CATEGORIES = [
 ];
 
 export default function TrailsScreen() {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const [tab, setTab] = useState<Tab>('trails');
   const [selectedTrailId, setSelectedTrailId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,7 +59,7 @@ export default function TrailsScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View>
-          <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>TRAILS</Text>
+          <Text style={[styles.heading, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>TRAILS</Text>
           <Text style={[styles.headingSub, { color: colors.ink3, fontFamily: fonts.mono }]}>
             CROSS-MEDIA CULTURAL JOURNEYS
           </Text>
@@ -115,7 +115,7 @@ export default function TrailsScreen() {
             <View style={styles.loader}><ActivityIndicator color={colors.accent} /></View>
           ) : filteredTrails.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: fonts.display }]}>
+              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                 {trails.length === 0 ? 'NO TRAILS YET' : 'NONE IN THIS CATEGORY'}
               </Text>
               <Text style={[styles.emptyText, { color: colors.ink3, fontFamily: fonts.body }]}>
@@ -187,14 +187,14 @@ export default function TrailsScreen() {
 
           {query.length === 0 ? (
             <View style={styles.empty}>
-              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: fonts.display }]}>FIND PEOPLE</Text>
+              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>FIND PEOPLE</Text>
               <Text style={[styles.emptyText, { color: colors.ink3, fontFamily: fonts.body }]}>
                 Search by name or @handle to follow readers, watchers, and listeners.
               </Text>
             </View>
           ) : people.length === 0 && !peopleLoading ? (
             <View style={styles.empty}>
-              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: fonts.display }]}>NO RESULTS</Text>
+              <Text style={[styles.emptyTitle, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>NO RESULTS</Text>
               <Text style={[styles.emptyText, { color: colors.ink3, fontFamily: fonts.body }]}>
                 No one found for "{query}".
               </Text>
@@ -203,12 +203,12 @@ export default function TrailsScreen() {
             people.map((person: any) => (
               <View key={person.id} style={[styles.personRow, { borderBottomColor: colors.border }]}>
                 <View style={[styles.personAvatar, { backgroundColor: colors.accent }]}>
-                  <Text style={[styles.personInitial, { color: colors.accentt, fontFamily: fonts.display }]}>
+                  <Text style={[styles.personInitial, { color: colors.accentt, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                     {(person.name ?? person.handle ?? '?')[0].toUpperCase()}
                   </Text>
                 </View>
                 <View style={styles.personInfo}>
-                  <Text style={[styles.personName, { color: colors.ink, fontFamily: fonts.display }]}>
+                  <Text style={[styles.personName, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]}>
                     {person.name ?? '—'}
                   </Text>
                   <Text style={[styles.personHandle, { color: colors.ink3, fontFamily: fonts.mono }]}>

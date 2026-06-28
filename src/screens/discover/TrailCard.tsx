@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function TrailCard({ trail, onPress }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const TAG_COLOURS: Record<string, string> = {
     filmmaker: colors.accent,
     movement:  colors.editorial,
@@ -44,7 +44,7 @@ export default function TrailCard({ trail, onPress }: Props) {
       </View>
 
       {/* Title */}
-      <Text style={[styles.title, { color: colors.ink, fontFamily: fonts.display }]} numberOfLines={2}>
+      <Text style={[styles.title, { color: colors.ink, fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]} numberOfLines={2}>
         {trail.title.toUpperCase()}
       </Text>
 
