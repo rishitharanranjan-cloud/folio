@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Dimensions,
+  ActivityIndicator, RefreshControl, Dimensions, Image, FlatList,
 } from 'react-native';
 import WeeklyNudgeBanner from '../components/WeeklyNudgeBanner';
 import ShelfItemModal from '../components/ShelfItemModal';
@@ -17,6 +17,8 @@ import VinylRecord   from '../components/shelf/VinylRecord';
 import CassetteTape  from '../components/shelf/CassetteTape';
 import GameCartridge from '../components/shelf/GameCartridge';
 import type { LogEntry } from '../hooks/useLogs';
+import { clampAmbient, hexToRgb, ambientToHex, getAmbientColour } from '../lib/ambientColour';
+import * as haptics from '../lib/haptics';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -193,6 +195,85 @@ const gridStyles = StyleSheet.create({
   item: {},
 });
 
+// ── Cover grid — 3-column poster grid ─────────────────────────────────────────
+const GRID_COLS = 3;
+const GRID_ITEM_W = (SCREEN_W - 48 - (GRID_COLS - 1) * 2) / GRID_COLS;
+
+function CoverGrid({ logs, mode, colors, onSelect }: {
+  logs: LogEntry[];
+  mode: 'dark' | 'light';
+  colors: any;
+  onSelect: (log: LogEntry) => void;
+}) {
+  return (
+    <FlatList
+      data={logs}
+      keyExtractor={item => item.id}
+      numColumns={GRID_COLS}
+      scrollEnabled={false}
+      contentContainerStyle={coverGridStyles.container}
+      columnWrapperStyle={coverGridStyles.row}
+      renderItem={({ item: log }) => {
+        const raw = log.dominant_colour ? hexToRgb(log.dominant_colour) : null;
+        const accent = raw
+          ? ambientToHex(clampAmbient(raw, mode === 'dark'))
+          : ambientToHex(clampAmbient(getAmbientColour(log.title), mode === 'dark'));
+
+        return (
+          <TouchableOpacity
+            style={[coverGridStyles.item, { width: GRID_ITEM_W }]}
+            onPress={() => { haptics.tapLight(); onSelect(log); }}
+            activeOpacity={0.85}
+          >
+            {log.cover_url ? (
+              <Image
+                source={{ uri: log.cover_url }}
+                style={[coverGridStyles.cover, { borderColor: colors.border }]}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[coverGridStyles.cover, coverGridStyles.placeholder, { backgroundColor: accent + '28', borderColor: accent }]}>
+                <Text style={[coverGridStyles.placeholderTxt, { color: accent, fontFamily: fonts.mono }]}>
+                  {log.title.slice(0, 2).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            {log.rating && (
+              <View style={[coverGridStyles.ratingBadge, { backgroundColor: accent }]}>
+                <Text style={[coverGridStyles.ratingTxt, { fontFamily: fonts.mono }]}>{'★'.repeat(log.rating)}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        );
+      }}
+    />
+  );
+}
+
+const coverGridStyles = StyleSheet.create({
+  container: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 20 },
+  row: { gap: 2, marginBottom: 2 },
+  item: { position: 'relative' },
+  cover: {
+    width: '100%',
+    aspectRatio: 2 / 3,
+    borderWidth: 1,
+  },
+  placeholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  placeholderTxt: { fontSize: 16, letterSpacing: 2 },
+  ratingBadge: {
+    position: 'absolute',
+    bottom: 3,
+    right: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  ratingTxt: { fontSize: 6, color: '#fff', letterSpacing: 0.5 },
+});
+
 // ── Empty state ───────────────────────────────────────────────────────────────
 function EmptyState({ tab, colors }: { tab: Tab; colors: any }) {
   const msg = EMPTY_MESSAGES[tab];
@@ -225,10 +306,11 @@ const emptyStyles = StyleSheet.create({
 interface Props { onOpenLog?: () => void }
 
 export default function ShelfScreen({ onOpenLog }: Props) {
-  const { colors } = useThemeStore();
+  const { colors, mode } = useThemeStore();
   const [activeTab, setActiveTab] = useState<Tab>('book');
   const [sortKey, setSortKey] = useState<SortKey>('date');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [gridView, setGridView] = useState(false);
   const { logs, loading, loadingMore, hasMore, refetch, loadMore } = useLogs(activeTab, sortKey, statusFilter);
   const [refreshing, setRefreshing] = useState(false);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
@@ -244,6 +326,7 @@ export default function ShelfScreen({ onOpenLog }: Props) {
   };
 
   const renderShelf = () => {
+    if (gridView) return <CoverGrid logs={logs} mode={mode} colors={colors} onSelect={setSelectedLog} />;
     if (activeTab === 'book') return <BookShelf logs={logs} colors={colors} onSelect={setSelectedLog} />;
     if (activeTab === 'film') return <FilmStrip logs={logs} colors={colors} onSelect={setSelectedLog} />;
     return <ShelfGrid logs={logs} type={activeTab} onSelect={setSelectedLog} />;
@@ -256,10 +339,21 @@ export default function ShelfScreen({ onOpenLog }: Props) {
 
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>MY SHELF</Text>
-        <Text style={[styles.count, { color: colors.ink3, fontFamily: fonts.mono }]}>
-          {loading ? '…' : `${logs.length}${hasMore ? '+' : ''} ${TABS.find(t => t.key === activeTab)?.label.toLowerCase() ?? ''}`}
-        </Text>
+        <View>
+          <Text style={[styles.heading, { color: colors.ink, fontFamily: fonts.display }]}>MY SHELF</Text>
+          <Text style={[styles.count, { color: colors.ink3, fontFamily: fonts.mono }]}>
+            {loading ? '…' : `${logs.length}${hasMore ? '+' : ''} ${TABS.find(t => t.key === activeTab)?.label.toLowerCase() ?? ''}`}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => { haptics.tapLight(); setGridView(v => !v); }}
+          style={[styles.viewToggle, { borderColor: gridView ? colors.accent : colors.border2, backgroundColor: gridView ? `${colors.accent}18` : 'transparent' }]}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.viewToggleTxt, { color: gridView ? colors.accent : colors.ink3, fontFamily: fonts.mono }]}>
+            {gridView ? '⊞ GRID' : '⊟ ART'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Media type tabs */}
@@ -393,13 +487,19 @@ const styles = StyleSheet.create({
     bottom: -10, right: -10, letterSpacing: 8,
   },
   header: {
-    flexDirection: 'row', alignItems: 'baseline',
+    flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24, paddingTop: 16, paddingBottom: 14,
     borderBottomWidth: 1,
   },
   heading: { fontSize: 32, letterSpacing: 4 },
-  count: { fontSize: 10, letterSpacing: 1 },
+  count: { fontSize: 10, letterSpacing: 1, marginTop: 2 },
+  viewToggle: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  viewToggleTxt: { fontSize: 9, letterSpacing: 1.5 },
   tabsScroll: { borderBottomWidth: 1, maxHeight: 44 },
   tabsContent: { paddingHorizontal: 16 },
   tab: {
