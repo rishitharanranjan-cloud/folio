@@ -435,7 +435,7 @@ export default function ProfileScreen() {
                     onPress={() => setMode(m)}
                     activeOpacity={0.8}
                   >
-                    <FolioCodeMark size={16} color={t.accent} />
+                    <FolioCodeMark size="small" color={t.accent} />
                     <Text style={[styles.themeCardName, { color: t.ink, fontFamily: fonts.mono }]}>
                       {THEME_NAMES[m].toUpperCase()}
                     </Text>
