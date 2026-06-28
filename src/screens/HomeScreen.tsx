@@ -41,13 +41,22 @@ function accentFor(log: LogEntry, isDark: boolean, fallback: string): string {
   return raw ? ambientToHex(clampAmbient(raw, isDark)) : fallback;
 }
 
+const STATUS_LABEL: Record<string, string> = {
+  in_progress: 'IN PROGRESS',
+  current:     'IN PROGRESS',
+  finished:    'FINISHED',
+  want:        'WANT TO READ',
+  dropped:     'DROPPED',
+  abandoned:   'ABANDONED',
+};
+
 // ── Continue card — full-bleed cover with gradient overlay ──────────────────
-function ContinueCard({ log, isDark, colors }: { log: LogEntry; isDark: boolean; colors: any }) {
+function ContinueCard({ log, isDark, colors, mode }: { log: LogEntry; isDark: boolean; colors: any; mode: 'dark' | 'light' }) {
   const accent = accentFor(log, isDark, colors.accent);
   const accentRgb = hexToRgb(accent);
-  const gradEnd = accentRgb
-    ? `rgba(${accentRgb[0]},${accentRgb[1]},${accentRgb[2]},0.95)`
-    : 'rgba(10,10,10,0.93)';
+  const scrimColor = accentRgb
+    ? `rgba(${Math.round(accentRgb[0] * 0.15)},${Math.round(accentRgb[1] * 0.15)},${Math.round(accentRgb[2] * 0.15)},0.92)`
+    : 'rgba(8,8,12,0.92)';
 
   return (
     <View style={styles.continueCard}>
@@ -60,19 +69,28 @@ function ContinueCard({ log, isDark, colors }: { log: LogEntry; isDark: boolean;
           </Text>
         </View>
       )}
-      {/* Gradient overlay: transparent top → accent bottom */}
-      <View style={[styles.continueGradientTop, { backgroundColor: 'transparent' }]} />
-      <View style={[styles.continueGradient, { backgroundColor: gradEnd }]}>
-        <View style={[styles.continueTypePill, { borderColor: 'rgba(255,255,255,0.4)' }]}>
-          <Text style={[styles.continueTypeText, { fontFamily: fonts.mono }]}>
-            {log.media_type.toUpperCase()}
-          </Text>
+      {/* Bottom scrim */}
+      <View style={[styles.continueGradient, { backgroundColor: scrimColor }]}>
+        {/* Type + status row */}
+        <View style={styles.continueTopRow}>
+          <View style={[styles.continueTypePill, { borderColor: 'rgba(255,255,255,0.35)' }]}>
+            <Text style={[styles.continueTypeText, { fontFamily: fonts.mono }]}>
+              {log.media_type.toUpperCase()}
+            </Text>
+          </View>
+          {log.status && STATUS_LABEL[log.status] && (
+            <View style={[styles.continueStatusPill, { borderColor: accent, backgroundColor: `${accent}30` }]}>
+              <Text style={[styles.continueStatusText, { color: accent, fontFamily: fonts.mono }]}>
+                {STATUS_LABEL[log.status]}
+              </Text>
+            </View>
+          )}
         </View>
-        <Text style={[styles.continueTitle, { fontFamily: fonts.display }]} numberOfLines={2}>
+        <Text style={[styles.continueTitle, { fontFamily: mode === 'dark' ? fonts.display : fonts.brand }]} numberOfLines={2}>
           {log.title.toUpperCase()}
         </Text>
         {log.creator ? (
-          <Text style={[styles.continueCreator, { fontFamily: fonts.mono }]} numberOfLines={1}>
+          <Text style={[styles.continueCreator, { fontFamily: fonts.body }]} numberOfLines={1}>
             {log.creator}
           </Text>
         ) : null}
@@ -81,7 +99,7 @@ function ContinueCard({ log, isDark, colors }: { log: LogEntry; isDark: boolean;
   );
 }
 
-// ── Recent card — cover + accent border + rating dots ───────────────────────
+// ── Recent card — grid item with cover + rating dots + title ────────────────
 function RecentCard({ log, isDark, colors }: { log: LogEntry; isDark: boolean; colors: any }) {
   const accent = accentFor(log, isDark, colors.accent);
 
@@ -94,25 +112,27 @@ function RecentCard({ log, isDark, colors }: { log: LogEntry; isDark: boolean; c
           resizeMode="cover"
         />
       ) : (
-        <View style={[styles.recentCover, { backgroundColor: accent, borderColor: accent, alignItems: 'center', justifyContent: 'center' }]}>
-          <Text style={{ color: '#fff', fontFamily: fonts.mono, fontSize: 18, letterSpacing: 1 }}>
+        <View style={[styles.recentCover, { backgroundColor: `${accent}28`, borderColor: accent, alignItems: 'center', justifyContent: 'center' }]}>
+          <Text style={{ color: accent, fontFamily: fonts.mono, fontSize: 18, letterSpacing: 1 }}>
             {MEDIA_INITIAL[log.media_type] ?? '·'}
           </Text>
         </View>
       )}
-      {log.rating && (
+      {log.rating ? (
         <View style={styles.ratingDots}>
           {[1,2,3,4,5].map(s => (
-            <View
-              key={s}
-              style={[styles.ratingDot, { backgroundColor: s <= log.rating! ? accent : colors.border2 }]}
-            />
+            <View key={s} style={[styles.ratingDot, { backgroundColor: s <= log.rating! ? accent : colors.border2 }]} />
           ))}
         </View>
-      )}
-      <Text style={[styles.recentTitle, { color: colors.ink, fontFamily: fonts.body }]} numberOfLines={2}>
+      ) : <View style={styles.ratingDotsPlaceholder} />}
+      <Text style={[styles.recentTitle, { color: colors.ink2, fontFamily: fonts.body }]} numberOfLines={2}>
         {log.title}
       </Text>
+      {log.creator ? (
+        <Text style={[styles.recentCreator, { color: colors.ink3, fontFamily: fonts.mono }]} numberOfLines={1}>
+          {log.creator}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -253,23 +273,23 @@ export default function HomeScreen() {
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
               {data!.continueItems.map((log) => (
-                <ContinueCard key={log.id} log={log} isDark={isDark} colors={colors} />
+                <ContinueCard key={log.id} log={log} isDark={isDark} colors={colors} mode={mode} />
               ))}
             </ScrollView>
           </View>
         )}
 
-        {/* Recent Additions */}
+        {/* Recent Additions — 3-column grid, max 6 */}
         {(data?.recentItems?.length ?? 0) > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionLabel, { color: colors.ink3, fontFamily: fonts.mono }]}>
               RECENT ADDITIONS
             </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
-              {data!.recentItems.map((log) => (
+            <View style={styles.recentGrid}>
+              {data!.recentItems.slice(0, 6).map((log) => (
                 <RecentCard key={log.id} log={log} isDark={isDark} colors={colors} />
               ))}
-            </ScrollView>
+            </View>
           </View>
         )}
 
@@ -325,8 +345,8 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     gap: 4,
   },
-  greetingLine: { fontSize: 18, fontStyle: 'italic' },
-  greetingName: { fontSize: 52, letterSpacing: 4, lineHeight: 56 },
+  greetingLine: { fontSize: 17, fontStyle: 'italic' },
+  greetingName: { fontSize: 40, letterSpacing: 3, lineHeight: 44 },
 
   statsRow: {
     flexDirection: 'row',
@@ -343,35 +363,47 @@ const styles = StyleSheet.create({
   hScroll: { paddingHorizontal: 28, gap: 12 },
 
   // Continue card
-  continueCard: { width: 160, height: 240, overflow: 'hidden' },
+  continueCard: { width: 185, height: 260, overflow: 'hidden' },
   continueCover: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  continueGradientTop: {
-    position: 'absolute', left: 0, right: 0, top: 0, height: 100,
-  },
   continueGradient: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
-    paddingTop: 20,
-    paddingHorizontal: 10,
-    paddingBottom: 12,
-    gap: 3,
+    paddingTop: 28,
+    paddingHorizontal: 11,
+    paddingBottom: 13,
+    gap: 4,
   },
+  continueTopRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 2 },
   continueTypePill: {
     alignSelf: 'flex-start',
     borderWidth: 1,
     paddingHorizontal: 5,
     paddingVertical: 2,
-    marginBottom: 2,
   },
-  continueTypeText: { fontSize: 6, letterSpacing: 2, color: 'rgba(255,255,255,0.8)' },
-  continueTitle: { fontSize: 13, letterSpacing: 1.5, lineHeight: 16, color: '#fff' },
-  continueCreator: { fontSize: 9, letterSpacing: 1, color: 'rgba(255,255,255,0.7)' },
+  continueStatusPill: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  continueTypeText: { fontSize: 6, letterSpacing: 2, color: 'rgba(255,255,255,0.7)' },
+  continueStatusText: { fontSize: 6, letterSpacing: 1.5 },
+  continueTitle: { fontSize: 14, letterSpacing: 1.5, lineHeight: 18, color: '#fff' },
+  continueCreator: { fontSize: 10, letterSpacing: 0.5, color: 'rgba(255,255,255,0.65)', fontStyle: 'italic' },
 
-  // Recent card
-  recentItem: { width: 96, gap: 6 },
-  recentCover: { width: 96, height: 144, borderWidth: 2 },
-  ratingDots: { flexDirection: 'row', gap: 3 },
+  // Recent grid
+  recentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 28,
+    gap: 12,
+  },
+  recentItem: { width: '30%', gap: 5 },
+  recentCover: { width: '100%', aspectRatio: 2 / 3, borderWidth: 1.5 },
+  ratingDots: { flexDirection: 'row', gap: 3, height: 8, alignItems: 'center' },
+  ratingDotsPlaceholder: { height: 8 },
   ratingDot: { width: 5, height: 5, borderRadius: 3 },
-  recentTitle: { fontSize: 12, fontStyle: 'italic', lineHeight: 16 },
+  recentTitle: { fontSize: 11, fontStyle: 'italic', lineHeight: 15 },
+  recentCreator: { fontSize: 9, letterSpacing: 0.5 },
 
   // Top pick
   topPickList: { borderTopWidth: 1, marginHorizontal: 28 },
